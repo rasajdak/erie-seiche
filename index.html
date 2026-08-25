@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Erie Seiche &mdash; Watch Lake Erie Slosh, Live</title>
+<meta name="description" content="Lake Erie tilts. Strong winds pile water up at one end of the lake, and when they let go the whole lake sloshes back and forth for days. This page reads eight NOAA water-level gauges from Toledo to Buffalo every six minutes and animates the lake's surface, live.">
+<link rel="canonical" href="https://ryansajdak.com/greatlakes/erie/seiche/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ryansajdak.com">
+<meta property="og:title" content="The Erie Seiche: watch Lake Erie slosh, live">
+<meta property="og:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. Live cross-section animated from eight NOAA gauges, Toledo to Buffalo.">
+<meta property="og:url" content="https://ryansajdak.com/greatlakes/erie/seiche/">
+<meta property="og:image" content="https://ryansajdak.com/greatlakes/erie/seiche/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Erie Seiche: watch Lake Erie slosh, live">
+<meta name="twitter:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. Live from eight NOAA gauges.">
+<meta name="twitter:image" content="https://ryansajdak.com/greatlakes/erie/seiche/preview.png">
+<meta name="theme-color" content="#0b1020">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1020'/%3E%3Cpath d='M12 62 Q 26 46 40 58 T 68 58 T 96 54 L 96 88 L 12 88 Z' fill='%235ba8d4'/%3E%3Cpath d='M12 56 Q 26 40 40 52 T 68 52 T 96 48' stroke='%23e8c85a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#0b1020;--surface:#131a2e;--ink:#e4e8f2;--muted:#98a2ba;--line:#26304a;
+  --water:#5ba8d4;--gold:#e8c85a;--low:#6fc3e8;--deep:#0e2c44;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"Public Sans",system-ui,sans-serif;
+  display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
+header{padding:18px clamp(16px,4vw,34px) 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 6px}
+.htop{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+h1{font-family:"Zilla Slab",Georgia,serif;font-weight:700;font-size:clamp(1.5rem,3.6vw,2.3rem);margin:0;letter-spacing:-.01em;line-height:1.05}
+.stat{font-family:"IBM Plex Mono",monospace;font-size:.95rem;color:var(--gold);font-weight:500;
+  border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);border-radius:999px;padding:4px 12px;white-space:nowrap;max-width:100%}
+.sub{color:var(--muted);font-size:.95rem;margin:8px 0 0;max-width:88ch}
+.sub b{color:var(--ink)}
+
+main{flex:1;padding:clamp(14px,2.5vw,26px) clamp(16px,4vw,34px);display:flex;flex-direction:column;gap:18px;max-width:1240px;width:100%;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.cardhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.cardhead h2{font-family:"IBM Plex Mono",monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:500}
+.cardhead .when{font-family:"IBM Plex Mono",monospace;font-size:.82rem;color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto}
+.cardhead .when b{color:var(--gold);font-weight:500}
+.ctrl{display:flex;align-items:center;gap:8px}
+button.tbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.05em;border-radius:8px;padding:6px 10px;cursor:pointer}
+button.tbtn:hover{border-color:var(--water);color:var(--water)}
+button.tbtn.on{border-color:var(--gold);color:var(--gold)}
+button.tbtn svg{width:11px;height:11px;display:block}
+.vizwrap{position:relative}
+#xsec{display:block;width:100%;height:auto}
+#lakemap{position:absolute;left:16px;bottom:46px;width:min(26%,240px);height:auto;pointer-events:auto;
+  background:color-mix(in srgb,var(--paper) 72%,transparent);border:1px solid var(--line);border-radius:10px;
+  backdrop-filter:blur(3px);padding:2px}
+svg text{font-family:"IBM Plex Mono",monospace}
+.chartwrap{padding:4px 6px 2px}
+#slosh{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none}
+.explain{color:var(--muted);font-size:.92rem;line-height:1.6;padding:14px 16px;margin:0}
+.explain b{color:var(--ink)}
+.explain a{color:var(--water)}
+
+.cornerbtns{position:fixed;right:14px;bottom:14px;z-index:600;display:flex;gap:8px}
+.fbbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:999px;
+  background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(8px);box-shadow:var(--shadow);cursor:pointer;
+  color:var(--ink);font-family:inherit;font-size:.85rem;font-weight:600;text-decoration:none}
+.fbbtn:hover{border-color:var(--water)}
+.fbbtn svg{width:15px;height:15px}
+.fbpanel{position:fixed;right:14px;bottom:60px;z-index:650;width:320px;max-width:calc(100vw - 28px);display:none;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+.fbpanel.on{display:block}
+.fbpanel h3{font-family:"Zilla Slab",serif;margin:0 0 3px;font-size:1.12rem}
+.fbpanel .lead{color:var(--muted);font-size:.84rem;margin:0 0 10px}
+.fbpanel textarea{width:100%;min-height:84px;resize:vertical;padding:9px;border:1px solid var(--line);
+  border-radius:9px;background:var(--paper);color:var(--ink);font-family:inherit;font-size:.88rem}
+.fbpanel input{width:100%;margin-top:8px;padding:9px;border:1px solid var(--line);border-radius:9px;
+  background:var(--paper);color:var(--ink);font-family:inherit;font-size:.85rem}
+.fbrow{display:flex;gap:8px;margin-top:10px}
+.fbsend{flex:1;padding:9px;border:none;border-radius:9px;background:var(--water);color:#0b1020;
+  font-family:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+.fbsend:disabled{opacity:.55;cursor:default}
+.fbclose{padding:9px 13px;border:1px solid var(--line);border-radius:9px;background:none;color:var(--muted);font-family:inherit;font-size:.85rem;cursor:pointer}
+.fbmsg{font-size:.8rem;margin-top:8px;min-height:1em}
+.fbmsg.ok{color:var(--water)} .fbmsg.err{color:#f0894e}
+
+#loader{position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:15px;background:var(--paper);color:var(--ink);transition:opacity .45s ease}
+#loader.off{opacity:0;pointer-events:none}
+#loader .lt{font-family:"Zilla Slab",Georgia,serif;font-weight:700;font-size:1.35rem;text-align:center;padding:0 20px}
+#loader .ls{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+
+footer{padding:12px clamp(16px,4vw,34px) 64px;border-top:1px solid var(--line);background:var(--surface);
+  color:var(--muted);font-size:.78rem;line-height:1.6}
+footer b{color:var(--ink)} footer a{color:var(--water)}
+
+@media (max-width:760px){
+  #lakemap{position:static;display:block;width:100%;max-width:330px;margin:2px auto 6px;
+    border:none;border-radius:0;background:none;padding:0}
+  .cardhead .when{margin-left:0;width:100%}
+  .stat{font-size:.82rem;white-space:normal;line-height:1.4}
+}
+</style>
+</head>
+<body>
+
+<div id="loader"><div class="lt">Reading the lake&hellip;</div><div class="ls" id="loadstat">contacting NOAA gauges</div></div>
+
+<header>
+  <p class="eyebrow">Great Lakes &middot; Lake Erie &middot; Live</p>
+  <div class="htop">
+    <h1>The Erie Seiche</h1>
+    <span class="stat" id="tiltpill">tilt: &mdash;</span>
+  </div>
+  <p class="sub">Lake Erie is long, shallow, and pointed straight into the prevailing southwest wind &mdash; which makes it the sloshiest big lake on Earth. A hard blow piles water up at Buffalo while the Toledo end drains; when the wind lets go, the whole lake rocks back and forth with a natural rhythm of about <b>14 hours</b>, sometimes for days. This page reads all <b>eight NOAA water-level gauges</b> around the lake every six minutes and animates the surface, hugely exaggerated. Drag the timeline, or press play and watch the lake breathe.</p>
+</header>
+
+<main>
+  <div class="card">
+    <div class="cardhead">
+      <h2>The lake in cross-section &middot; Toledo &rarr; Buffalo</h2>
+      <div class="ctrl">
+        <button class="tbtn" id="playbtn" aria-label="Play or pause the animation"><svg id="playic" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3l16 9-16 9z"/></svg><span id="playlab">Play</span></button>
+        <button class="tbtn on" id="livebtn">&#9679; Live</button>
+      </div>
+      <div class="when" id="whenlab">&mdash;</div>
+    </div>
+    <div class="vizwrap">
+      <svg id="xsec" viewBox="0 0 1000 470" preserveAspectRatio="xMidYMid meet" aria-label="Animated cross-section of Lake Erie's water surface from Toledo to Buffalo"></svg>
+      <svg id="lakemap" viewBox="0 0 300 152" preserveAspectRatio="xMidYMid meet" aria-label="Map of Lake Erie with gauge stations"></svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead">
+      <h2>The slosh-o-gram &middot; end-to-end tilt, past 5 days</h2>
+      <div class="when" id="sloshlab">Buffalo minus Toledo &middot; drag to scrub</div>
+    </div>
+    <div class="chartwrap">
+      <svg id="slosh" viewBox="0 0 1000 240" preserveAspectRatio="xMidYMid meet" aria-label="Chart of the water level difference between Buffalo and Toledo over the past five days"></svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="explain"><b>Why Erie sloshes.</b> A seiche (pronounced <i>saysh</i>) is a standing wave in an enclosed basin &mdash; the same thing that happens when you carry a full baking pan too fast. Erie is the perfect pan: 241 miles long, averaging just 62 feet deep, aligned with the storm winds. Sustained southwesterlies drag surface water toward Buffalo, tilting the lake; the record events have piled up differences of <b>more than 15 feet</b> between the two ends. When the wind stops, the lake rebounds and oscillates at its natural period of roughly 14 hours. The worst in history was <b>October 18, 1844</b>, when a night seiche topped Buffalo's 14-foot seawall and killed 78 people. In <b>December 1985</b> a storm drove the water at Buffalo up 8 feet, flooding the waterfront. During the <b>Christmas blizzard of 2022</b> the gauge at Buffalo jumped 6 feet in hours while Toledo dropped below its low-water datum. On a calm week, the chart above is a gentle ripple of inches &mdash; but keep an eye on it when a front comes through.</p>
+  </div>
+</main>
+
+<div class="cornerbtns">
+  <a class="fbbtn coffee" href="https://buymeacoffee.com/ryansajdak" target="_blank" rel="noopener">&#9749; Coffee</a>
+  <button class="fbbtn" id="fbbtn" aria-label="Send feedback">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Feedback
+  </button>
+</div>
+<div class="fbpanel" id="fbpanel">
+  <h3>Suggest an improvement</h3>
+  <p class="lead">Ideas, corrections, or bugs for this page &mdash; thank you!</p>
+  <textarea id="fbtext" placeholder="What could be better?"></textarea>
+  <input id="fbemail" type="email" placeholder="Your email (optional, for a reply)" autocomplete="email">
+  <div class="fbrow">
+    <button class="fbsend" id="fbsend">Send feedback</button>
+    <button class="fbclose" id="fbclose">Cancel</button>
+  </div>
+  <div class="fbmsg" id="fbmsg"></div>
+</div>
+
+<footer>
+  <b>Data:</b> <a href="https://tidesandcurrents.noaa.gov/" target="_blank" rel="noopener">NOAA CO-OPS</a> water-level gauges (6-minute preliminary data, feet above Low Water Datum, IGLD&nbsp;85), refreshed every 6 minutes &middot; lake outline from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>. The cross-section shows each gauge's departure from its own 5-day mean, at the exaggeration printed under the chart; the bottom profile is schematic. Seiche history: NOAA, NWS Buffalo, Buffalo History Gazette. <span style="font-family:'IBM Plex Mono',monospace;font-size:.68rem">Part of <a href="https://ryansajdak.com/">ryansajdak.com</a>.</span>
+</footer>
+
+<script>
+"use strict";
+
+/* ---------- stations, west to east ---------- */
+const STATIONS = [
+  {id:"9063085", name:"Toledo",         st:"OH", lat:41.6936, lon:-83.4723},
+  {id:"9063090", name:"Fermi",          st:"MI", lat:41.9600, lon:-83.2567},
+  {id:"9063079", name:"Marblehead",     st:"OH", lat:41.5436, lon:-82.7314},
+  {id:"9063063", name:"Cleveland",      st:"OH", lat:41.5409, lon:-81.6355},
+  {id:"9063053", name:"Fairport",       st:"OH", lat:41.7598, lon:-81.2811},
+  {id:"9063038", name:"Erie",           st:"PA", lat:42.1539, lon:-80.0758},
+  {id:"9063028", name:"Sturgeon Pt",    st:"NY", lat:42.6913, lon:-79.0473},
+  {id:"9063020", name:"Buffalo",        st:"NY", lat:42.8774, lon:-78.8905}
+];
+const TOLEDO = STATIONS[0], BUFFALO = STATIONS[STATIONS.length-1];
+
+/* project each station onto the Toledo->Buffalo axis, in miles */
+const COSLAT = Math.cos(42.3*Math.PI/180), MI_PER_DEG = 69.09;
+function flat(s){ return {x:(s.lon-TOLEDO.lon)*COSLAT, y:s.lat-TOLEDO.lat}; }
+const AX = flat(BUFFALO), AXLEN2 = AX.x*AX.x + AX.y*AX.y;
+const AXIS_MI = Math.sqrt(AXLEN2)*MI_PER_DEG;
+for (const s of STATIONS){
+  const p = flat(s);
+  s.mile = Math.max(0, Math.min(1, (p.x*AX.x + p.y*AX.y)/AXLEN2)) * AXIS_MI;
+}
+
+/* schematic bottom profile along the axis: [mile fraction, depth ft] */
+const BOTTOM = [[0,8],[.05,22],[.13,28],[.22,26],[.3,52],[.42,62],[.55,72],[.68,90],[.78,140],[.85,210],[.92,120],[.97,45],[1,15]];
+const MAX_DEPTH = 210;
+
+/* ---------- data state ---------- */
+const WINDOW_DAYS = 5, STEP = 6;               // minutes
+let T0 = 0, TN = 0, TIMES = [];                // timeline, epoch minutes UTC
+let idx = 0, playing = false, live = true, playTimer = null;
+let maxDev = 0.75;
+const fmtDay = new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",month:"short",day:"numeric"});
+const fmtTime = new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"});
+
+function ymd(d){ return d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,"0")+String(d.getUTCDate()).padStart(2,"0"); }
+
+async function fetchStation(s){
+  const end = new Date(), beg = new Date(end.getTime() - WINDOW_DAYS*864e5);
+  const u = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level"
+    + "&station=" + s.id + "&begin_date=" + ymd(beg) + "&end_date=" + ymd(end)
+    + "&datum=LWD&units=english&time_zone=gmt&format=json";
+  try{
+    const r = await fetch(u);
+    const j = await r.json();
+    if (!j.data || !j.data.length) throw new Error("no data");
+    const m = new Map();
+    for (const p of j.data){
+      const v = parseFloat(p.v);
+      if (!isFinite(v)) continue;
+      m.set(Date.parse(p.t.replace(" ","T")+"Z")/60000, v);
+    }
+    s.series = m;
+    let sum = 0, n = 0;
+    for (const v of m.values()){ sum += v; n++; }
+    s.mean = sum/n;
+    s.ok = n > 50;
+  }catch(e){ s.ok = false; s.series = new Map(); s.mean = 0; }
+}
+
+async function fetchWind(s){
+  const u = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=wind&station=" + s.id
+    + "&date=latest&units=english&time_zone=gmt&format=json";
+  try{
+    const r = await fetch(u);
+    const j = await r.json();
+    const p = j.data && j.data[0];
+    if (p && isFinite(parseFloat(p.s))) s.wind = {kn:parseFloat(p.s), deg:parseFloat(p.d), dr:p.dr};
+  }catch(e){ /* many gauges have no anemometer */ }
+}
+
+function devAt(s, t){
+  if (!s.ok) return null;
+  for (const dt of [0,-6,6,-12,12,-18,18]){
+    const v = s.series.get(t+dt);
+    if (v !== undefined) return v - s.mean;
+  }
+  return null;
+}
+
+function buildTimeline(){
+  let lo = Infinity, hi = -Infinity;
+  for (const s of STATIONS){
+    if (!s.ok) continue;
+    for (const t of [s.series.keys().next().value]) lo = Math.min(lo, t);
+    let last = 0; for (const t of s.series.keys()) if (t > last) last = t;
+    hi = Math.max(hi, last);
+  }
+  T0 = Math.ceil(lo/STEP)*STEP; TN = Math.floor(hi/STEP)*STEP;
+  TIMES = [];
+  for (let t = T0; t <= TN; t += STEP) TIMES.push(t);
+  maxDev = 0.4;
+  for (const s of STATIONS){
+    if (!s.ok) continue;
+    for (const v of s.series.values()) maxDev = Math.max(maxDev, Math.abs(v - s.mean));
+  }
+}
+
+/* ---------- svg helpers ---------- */
+const NS = "http://www.w3.org/2000/svg";
+function el(parent, tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e); return e;
+}
+function smoothPath(pts){
+  if (pts.length < 2) return "";
+  let d = "M" + pts[0][0].toFixed(1) + "," + pts[0][1].toFixed(1);
+  for (let i = 0; i < pts.length-1; i++){
+    const p0 = pts[Math.max(0,i-1)], p1 = pts[i], p2 = pts[i+1], p3 = pts[Math.min(pts.length-1,i+2)];
+    const c1x = p1[0] + (p2[0]-p0[0])/6, c1y = p1[1] + (p2[1]-p0[1])/6;
+    const c2x = p2[0] - (p3[0]-p1[0])/6, c2y = p2[1] - (p3[1]-p1[1])/6;
+    d += "C" + c1x.toFixed(1) + "," + c1y.toFixed(1) + " " + c2x.toFixed(1) + "," + c2y.toFixed(1) + " " + p2[0].toFixed(1) + "," + p2[1].toFixed(1);
+  }
+  return d;
+}
+
+/* ---------- cross-section ---------- */
+const xsec = document.getElementById("xsec");
+const XL = 50, XR = 950, YSURF = 175, YBOT_TOP = 200, YBOT_BASE = 420;
+let devScale = 60;
+const xmile = m => XL + (m/AXIS_MI)*(XR-XL);
+let surfPath, waterPath, dotEls = [], valEls = [], stLabels = [];
+
+function buildXsec(){
+  xsec.innerHTML = "";
+  const defs = el(xsec, "defs", {});
+  const g1 = el(defs, "linearGradient", {id:"gwater", x1:0, y1:0, x2:0, y2:1});
+  el(g1, "stop", {offset:"0%", "stop-color":"#2a6a96"});
+  el(g1, "stop", {offset:"100%", "stop-color":"#0e2c44"});
+
+  devScale = Math.min(60, 60/(maxDev/1.2));
+
+  /* water first, then the lakebed on top of it so the bottom actually occludes the water */
+  waterPath = el(xsec, "path", {fill:"url(#gwater)", "fill-opacity":.9});
+  surfPath = el(xsec, "path", {fill:"none", stroke:"var(--water)", "stroke-width":2.5, "stroke-linecap":"round"});
+
+  const bot = BOTTOM.map(([f,dep]) => [XL + f*(XR-XL), YBOT_TOP + (dep/MAX_DEPTH)*(YBOT_BASE-YBOT_TOP)]);
+  const botD = smoothPath(bot);
+  el(xsec, "path", {d: botD + "L" + XR + ",455L" + XL + ",455Z", fill:"#1a2340"});
+  el(xsec, "path", {d: botD, fill:"none", stroke:"#3b4d75", "stroke-width":1.5});
+
+  /* mean line */
+  el(xsec, "line", {x1:XL, y1:YSURF, x2:XR, y2:YSURF, stroke:"var(--muted)", "stroke-width":1, "stroke-dasharray":"2 5", opacity:.5});
+
+  /* ft scale bracket */
+  const sy = YSURF - devScale, sy2 = YSURF;
+  el(xsec, "line", {x1:XL-14, y1:sy, x2:XL-14, y2:sy2, stroke:"var(--muted)", "stroke-width":1});
+  el(xsec, "line", {x1:XL-18, y1:sy, x2:XL-10, y2:sy, stroke:"var(--muted)", "stroke-width":1});
+  el(xsec, "line", {x1:XL-18, y1:sy2, x2:XL-10, y2:sy2, stroke:"var(--muted)", "stroke-width":1});
+  el(xsec, "text", {x:XL-14, y:sy-7, fill:"var(--muted)", "font-size":10, "text-anchor":"middle"}).textContent = (60/devScale).toFixed(1) + " ft";
+
+  /* station dots, hairlines, labels */
+  dotEls = []; valEls = []; stLabels = [];
+  STATIONS.forEach((s, i) => {
+    const x = xmile(s.mile);
+    const up = i % 2 === 0;
+    const ly = up ? 52 : 92;
+    el(xsec, "line", {x1:x, y1:ly+8, x2:x, y2:YSURF+2, stroke:"var(--line)", "stroke-width":1, opacity:.85});
+    const nm = el(xsec, "text", {x:x, y:ly-8, fill:"var(--ink)", "font-size":11.5, "text-anchor":"middle", "font-weight":500});
+    nm.textContent = s.name;
+    if (!s.ok){ nm.setAttribute("fill", "var(--muted)"); nm.textContent += " (offline)"; }
+    const val = el(xsec, "text", {x:x, y:ly+5, "font-size":11, "text-anchor":"middle"});
+    dotEls.push(el(xsec, "circle", {cx:x, cy:YSURF, r:4.5, fill:"var(--gold)", stroke:"#0b1020", "stroke-width":1.5}));
+    valEls.push(val); stLabels.push(nm);
+  });
+
+  /* axis labels */
+  el(xsec, "text", {x:XL, y:452, fill:"var(--muted)", "font-size":10}).textContent = "0 mi";
+  el(xsec, "text", {x:XR, y:452, fill:"var(--muted)", "font-size":10, "text-anchor":"end"}).textContent = Math.round(AXIS_MI) + " mi";
+  const exag = Math.round(devScale / ((XR-XL)/(AXIS_MI*5280)) / 1000)*1000;
+  el(xsec, "text", {x:(XL+XR)/2, y:452, fill:"var(--muted)", "font-size":10, "text-anchor":"middle"}).textContent =
+    "departure from each gauge's 5-day mean · vertical scale exaggerated " + exag.toLocaleString() + "× · bottom profile schematic";
+}
+
+function renderXsec(t){
+  const pts = [], mapDevs = [];
+  for (const s of STATIONS){
+    const d = devAt(s, t);
+    mapDevs.push(d);
+    if (d === null) continue;
+    pts.push([xmile(s.mile), YSURF - d*devScale, d]);
+  }
+  if (pts.length < 2) return;
+  const first = [[XL, pts[0][1]]], last = [[XR, pts[pts.length-1][1]]];
+  const curve = first.concat(pts.map(p=>[p[0],p[1]])).concat(last);
+  const d = smoothPath(curve);
+  surfPath.setAttribute("d", d);
+  waterPath.setAttribute("d", d + "L" + XR + ",455L" + XL + ",455Z");
+  STATIONS.forEach((s, i) => {
+    const dv = mapDevs[i];
+    if (dv === null){ dotEls[i].setAttribute("opacity", 0); valEls[i].textContent = ""; return; }
+    dotEls[i].setAttribute("opacity", 1);
+    dotEls[i].setAttribute("cy", YSURF - dv*devScale);
+    dotEls[i].setAttribute("fill", dv >= 0 ? "var(--gold)" : "var(--low)");
+    valEls[i].textContent = (dv >= 0 ? "+" : "−") + Math.abs(dv).toFixed(2) + " ft";
+    valEls[i].setAttribute("fill", dv >= 0 ? "var(--gold)" : "var(--low)");
+  });
+  renderMapDots(mapDevs);
+  const dt = new Date(t*60000);
+  document.getElementById("whenlab").innerHTML = fmtDay.format(dt) + " &middot; <b>" + fmtTime.format(dt) + " ET</b>";
+}
+
+/* ---------- lake map inset ---------- */
+const OUTLINE = [[-83.077,42.304],[-83.098,42.263],[-83.124,42.09],[-83.107,42.056],[-82.874,41.984],[-82.712,42.035],[-82.623,42.038],[-82.549,41.987],[-82.499,41.914],[-82.487,42.035],[-82.387,42.126],[-82.085,42.255],[-81.924,42.264],[-81.931,42.284],[-81.856,42.325],[-81.897,42.256],[-81.857,42.259],[-81.793,42.405],[-81.54,42.572],[-81.359,42.649],[-81.229,42.67],[-80.932,42.667],[-80.511,42.572],[-80.358,42.579],[-80.11,42.543],[-80.046,42.558],[-80.096,42.571],[-80.3,42.583],[-80.341,42.603],[-80.443,42.6],[-80.454,42.618],[-80.379,42.685],[-80.348,42.668],[-80.318,42.721],[-80.232,42.778],[-79.835,42.832],[-79.717,42.867],[-79.643,42.845],[-79.579,42.862],[-79.496,42.857],[-79.447,42.881],[-79.203,42.88],[-79.095,42.85],[-79.077,42.87],[-78.943,42.899],[-78.915,42.932],[-79.042,43.01],[-79.032,43.055],[-79.075,43.089],[-79.066,43.106],[-79.026,43.086],[-78.915,43.076],[-78.888,43.051],[-78.936,42.98],[-78.909,42.952],[-78.869,42.855],[-78.881,42.781],[-79.031,42.714],[-79.156,42.577],[-79.235,42.557],[-79.368,42.49],[-79.471,42.407],[-79.752,42.272],[-79.889,42.23],[-80.111,42.132],[-80.135,42.126],[-80.117,42.151],[-80.067,42.167],[-80.09,42.174],[-80.211,42.092],[-80.376,42.024],[-80.869,41.893],[-80.896,41.873],[-81.026,41.845],[-81.348,41.729],[-81.672,41.522],[-81.743,41.498],[-81.808,41.51],[-81.878,41.49],[-82.041,41.511],[-82.251,41.45],[-82.363,41.439],[-82.458,41.394],[-82.546,41.412],[-82.685,41.495],[-82.609,41.428],[-82.684,41.465],[-82.76,41.463],[-82.788,41.476],[-82.926,41.432],[-82.959,41.455],[-82.979,41.444],[-82.993,41.458],[-83.061,41.462],[-82.979,41.469],[-82.94,41.494],[-82.698,41.517],[-82.711,41.543],[-82.786,41.544],[-82.846,41.592],[-82.856,41.551],[-82.885,41.536],[-82.989,41.544],[-83.096,41.62],[-83.219,41.646],[-83.315,41.709],[-83.382,41.703],[-83.465,41.729],[-83.462,41.759],[-83.425,41.764],[-83.421,41.81],[-83.371,41.878],[-83.336,41.887],[-83.31,41.935],[-83.26,41.934],[-83.253,41.96],[-83.267,41.983],[-83.221,41.995],[-83.199,42.038],[-83.178,42.017],[-83.199,42.065],[-83.192,42.106],[-83.125,42.268]];
+const lakemap = document.getElementById("lakemap");
+let mapDotEls = [];
+function mapProject(){
+  let xlo=Infinity,xhi=-Infinity,ylo=Infinity,yhi=-Infinity;
+  const pts = OUTLINE.map(([lon,lat]) => [lon*COSLAT, lat]);
+  for (const [x,y] of pts){ xlo=Math.min(xlo,x); xhi=Math.max(xhi,x); ylo=Math.min(ylo,y); yhi=Math.max(yhi,y); }
+  const pad = 10, W = 300, H = 152;
+  const sc = Math.min((W-2*pad)/(xhi-xlo), (H-2*pad)/(yhi-ylo));
+  return (lon,lat) => [pad + (lon*COSLAT - xlo)*sc, H - pad - (lat - ylo)*sc];
+}
+function buildMap(){
+  lakemap.innerHTML = "";
+  const prj = mapProject();
+  const d = OUTLINE.map((p,i) => (i?"L":"M") + prj(p[0],p[1]).map(v=>v.toFixed(1)).join(",")).join("") + "Z";
+  el(lakemap, "path", {d, fill:"#16233c", stroke:"#31456e", "stroke-width":1});
+  mapDotEls = STATIONS.map(s => {
+    const [x,y] = prj(s.lon, s.lat);
+    const c = el(lakemap, "circle", {cx:x, cy:y, r:3.4, fill:"var(--muted)", stroke:"#0b1020", "stroke-width":1});
+    el(c, "title", {}).textContent = s.name + ", " + s.st;
+    return c;
+  });
+  const [bx,by] = prj(BUFFALO.lon, BUFFALO.lat), [tx,ty] = prj(TOLEDO.lon, TOLEDO.lat);
+  el(lakemap, "text", {x:bx-6, y:by-4, fill:"var(--muted)", "font-size":8.5, "text-anchor":"end"}).textContent = "Buffalo";
+  el(lakemap, "text", {x:tx-4, y:ty+11, fill:"var(--muted)", "font-size":8.5, "text-anchor":"start"}).textContent = "Toledo";
+  /* wind arrows for stations that report wind */
+  for (const s of STATIONS){
+    if (!s.wind || s.wind.kn < 2) continue;
+    const [x,y] = prj(s.lon, s.lat);
+    const to = (s.wind.deg + 180) * Math.PI/180;
+    const len = 6 + Math.min(16, s.wind.kn*0.8);
+    const dx = Math.sin(to)*len, dy = -Math.cos(to)*len;
+    const g = el(lakemap, "g", {stroke:"var(--gold)", "stroke-width":1.4, "stroke-linecap":"round", opacity:.9});
+    el(g, "line", {x1:x, y1:y, x2:x+dx, y2:y+dy});
+    const a = Math.atan2(dy,dx);
+    el(g, "line", {x1:x+dx, y1:y+dy, x2:x+dx-5*Math.cos(a-0.45), y2:y+dy-5*Math.sin(a-0.45)});
+    el(g, "line", {x1:x+dx, y1:y+dy, x2:x+dx-5*Math.cos(a+0.45), y2:y+dy-5*Math.sin(a+0.45)});
+    el(g, "title", {}).textContent = "wind " + s.wind.dr + " " + Math.round(s.wind.kn) + " kn";
+  }
+}
+function renderMapDots(devs){
+  devs.forEach((d, i) => {
+    if (!mapDotEls[i]) return;
+    if (d === null){ mapDotEls[i].setAttribute("fill", "#3a445e"); return; }
+    const f = Math.max(-1, Math.min(1, d/Math.max(0.3, maxDev)));
+    mapDotEls[i].setAttribute("fill", f >= 0
+      ? "rgb(" + Math.round(120+112*f) + "," + Math.round(120+80*f) + "," + Math.round(140-50*f) + ")"
+      : "rgb(" + Math.round(111*-f) + "," + Math.round(120+75*-f) + "," + Math.round(160+72*-f) + ")");
+    mapDotEls[i].setAttribute("r", 3 + Math.abs(f)*2.2);
+  });
+}
+
+/* ---------- slosh-o-gram ---------- */
+const slosh = document.getElementById("slosh");
+const SL = 50, SR = 970, ST = 16, SB = 208;
+let cursorLine = null, sloshDiffs = [];
+function buildSlosh(){
+  slosh.innerHTML = "";
+  sloshDiffs = TIMES.map(t => {
+    const b = devAt(BUFFALO, t), o = devAt(TOLEDO, t);
+    return (b === null || o === null) ? null : b - o;
+  });
+  let m = 0.3;
+  for (const v of sloshDiffs) if (v !== null) m = Math.max(m, Math.abs(v));
+  m *= 1.15;
+  const x = i => SL + (i/(TIMES.length-1))*(SR-SL);
+  const y = v => (ST+SB)/2 - v/m*(SB-ST)/2;
+
+  /* day gridlines (midnight ET) */
+  for (let i = 1; i < TIMES.length; i++){
+    const d1 = fmtDay.format(new Date(TIMES[i-1]*60000)), d2 = fmtDay.format(new Date(TIMES[i]*60000));
+    if (d1 !== d2){
+      el(slosh, "line", {x1:x(i), y1:ST, x2:x(i), y2:SB, stroke:"var(--line)", "stroke-width":1});
+      el(slosh, "text", {x:x(i)+4, y:SB+16, fill:"var(--muted)", "font-size":10}).textContent = d2;
+    }
+  }
+  /* y ticks */
+  const tick = m > 2 ? 1 : m > 0.8 ? 0.5 : 0.2;
+  for (let v = -Math.floor(m/tick)*tick; v <= m; v += tick){
+    const yy = y(v);
+    if (yy < ST || yy > SB) continue;
+    el(slosh, "line", {x1:SL, y1:yy, x2:SR, y2:yy, stroke:"var(--line)", "stroke-width":1, opacity: Math.abs(v)<1e-9?0.9:0.35});
+    el(slosh, "text", {x:SL-6, y:yy+3.5, fill:"var(--muted)", "font-size":10, "text-anchor":"end"}).textContent = (v>0?"+":"") + v.toFixed(1);
+  }
+  el(slosh, "text", {x:SL-6, y:ST-4, fill:"var(--muted)", "font-size":9, "text-anchor":"end"}).textContent = "ft";
+  el(slosh, "text", {x:SR, y:y(m*0.9)+3, fill:"var(--gold)", "font-size":9.5, "text-anchor":"end", opacity:.9}).textContent = "high at Buffalo ↑";
+  el(slosh, "text", {x:SR, y:y(-m*0.9)+3, fill:"var(--low)", "font-size":9.5, "text-anchor":"end", opacity:.9}).textContent = "high at Toledo ↓";
+
+  /* the line, split into segments at gaps */
+  let seg = [];
+  const segs = [];
+  sloshDiffs.forEach((v, i) => {
+    if (v === null){ if (seg.length > 1) segs.push(seg); seg = []; return; }
+    seg.push([x(i), y(v)]);
+  });
+  if (seg.length > 1) segs.push(seg);
+  for (const sg of segs){
+    el(slosh, "path", {d: "M" + sg.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join("L"),
+      fill:"none", stroke:"var(--water)", "stroke-width":1.8, "stroke-linejoin":"round"});
+  }
+  cursorLine = el(slosh, "line", {x1:SL, y1:ST, x2:SL, y2:SB, stroke:"var(--gold)", "stroke-width":1.5, opacity:.9});
+
+  /* scrub interactions */
+  const toIdx = ev => {
+    const r = slosh.getBoundingClientRect();
+    const px = (ev.clientX - r.left)/r.width*1000;
+    return Math.max(0, Math.min(TIMES.length-1, Math.round((px-SL)/(SR-SL)*(TIMES.length-1))));
+  };
+  let down = false;
+  slosh.addEventListener("pointerdown", ev => { down = true; slosh.setPointerCapture(ev.pointerId); setIdx(toIdx(ev), true); });
+  slosh.addEventListener("pointermove", ev => { if (down) setIdx(toIdx(ev), true); });
+  slosh.addEventListener("pointerup", () => down = false);
+}
+function renderCursor(){
+  if (!cursorLine) return;
+  const xx = SL + (idx/(TIMES.length-1))*(SR-SL);
+  cursorLine.setAttribute("x1", xx); cursorLine.setAttribute("x2", xx);
+  const v = sloshDiffs[idx];
+  document.getElementById("sloshlab").innerHTML = v === null ? "no reading here" :
+    "tilt now shown: <b style='color:var(--gold)'>" + (v>=0?"+":"−") + Math.abs(v).toFixed(2) + " ft</b> (Buffalo minus Toledo)";
+}
+
+/* ---------- playback & state ---------- */
+function setIdx(i, user){
+  idx = Math.max(0, Math.min(TIMES.length-1, i));
+  if (user){ setLive(false); stopPlay(); }
+  renderXsec(TIMES[idx]);
+  renderCursor();
+}
+function setLive(v){
+  live = v;
+  document.getElementById("livebtn").classList.toggle("on", v);
+  if (v){ stopPlay(); idx = TIMES.length-1; renderXsec(TIMES[idx]); renderCursor(); }
+}
+function stopPlay(){
+  playing = false; clearInterval(playTimer);
+  document.getElementById("playlab").textContent = "Play";
+  document.getElementById("playic").innerHTML = '<path d="M6 3l16 9-16 9z"/>';
+}
+function togglePlay(){
+  if (playing){ stopPlay(); return; }
+  playing = true; setLive(false);
+  if (idx >= TIMES.length-1) idx = 0;
+  document.getElementById("playlab").textContent = "Pause";
+  document.getElementById("playic").innerHTML = '<rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/>';
+  playTimer = setInterval(() => {
+    idx += 2;
+    if (idx >= TIMES.length-1){ idx = TIMES.length-1; stopPlay(); }
+    renderXsec(TIMES[idx]); renderCursor();
+  }, 40);
+}
+document.getElementById("playbtn").addEventListener("click", togglePlay);
+document.getElementById("livebtn").addEventListener("click", () => setLive(true));
+
+function updatePill(){
+  const b = devAt(BUFFALO, TN), o = devAt(TOLEDO, TN);
+  const pill = document.getElementById("tiltpill");
+  if (b === null || o === null){ pill.textContent = "tilt: no data"; return; }
+  const v = b - o;
+  pill.innerHTML = "live tilt: " + (v>=0?"+":"−") + Math.abs(v).toFixed(2) + " ft " + (Math.abs(v) < 0.15 ? "&middot; calm" : v > 0 ? "&middot; piled at Buffalo" : "&middot; piled at Toledo");
+}
+
+/* ---------- load ---------- */
+async function load(first){
+  const stat = document.getElementById("loadstat");
+  if (first) stat.textContent = "contacting 8 NOAA gauges";
+  await Promise.all(STATIONS.map(fetchStation).concat(STATIONS.map(fetchWind)));
+  if (!STATIONS.some(s => s.ok)){
+    if (first) stat.textContent = "NOAA API unreachable, try again shortly";
+    return;
+  }
+  buildTimeline();
+  buildXsec();
+  buildMap();
+  buildSlosh();
+  updatePill();
+  if (live) idx = TIMES.length-1;
+  renderXsec(TIMES[idx]);
+  renderCursor();
+  if (first){
+    document.getElementById("loader").classList.add("off");
+    setTimeout(() => togglePlay(), 600);
+  }
+}
+load(true);
+setInterval(() => { if (!playing) load(false); }, 6*60*1000);
+
+/* ---------- feedback ---------- */
+(function feedback(){
+  const btn = document.getElementById("fbbtn"), panel = document.getElementById("fbpanel"),
+        txt = document.getElementById("fbtext"), em = document.getElementById("fbemail"),
+        send = document.getElementById("fbsend"), close = document.getElementById("fbclose"),
+        msg = document.getElementById("fbmsg");
+  btn.addEventListener("click", () => { panel.classList.toggle("on"); if (panel.classList.contains("on")) txt.focus(); });
+  close.addEventListener("click", () => panel.classList.remove("on"));
+  send.addEventListener("click", async () => {
+    const message = txt.value.trim();
+    if (message.length < 3){ msg.className = "fbmsg err"; msg.textContent = "Please add a little more detail."; return; }
+    send.disabled = true; msg.className = "fbmsg"; msg.textContent = "Sending…";
+    const addr = ["dev", "ryansajdak.com"].join("@");
+    try{
+      const r = await fetch("https://formsubmit.co/ajax/" + addr, {method:"POST",
+        headers:{"Content-Type":"application/json", "Accept":"application/json"},
+        body: JSON.stringify({message, reply_email: em.value.trim() || "(not provided)",
+          _subject: "Erie seiche page — feedback", page: location.href})});
+      if (!r.ok) throw new Error("http " + r.status);
+      msg.className = "fbmsg ok"; msg.textContent = "Sent — thank you!";
+      txt.value = ""; em.value = "";
+      setTimeout(() => panel.classList.remove("on"), 1600);
+    }catch(err){
+      msg.className = "fbmsg err";
+      msg.innerHTML = 'Could not send — email me at <a href="mailto:' + addr + '">' + addr + "</a> instead.";
+    }finally{ send.disabled = false; }
+  });
+})();
+</script>
+</body>
+</html>
