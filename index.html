@@ -99,6 +99,32 @@ footer{padding:12px clamp(16px,4vw,34px) 64px;border-top:1px solid var(--line);b
   color:var(--muted);font-size:.78rem;line-height:1.6}
 footer b{color:var(--ink)} footer a{color:var(--water)}
 
+/* ---- share poster ---- */
+.sharewrap{position:relative}
+.sharemenu{position:absolute;z-index:700;top:100%;left:0;margin-top:6px;display:none;min-width:230px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:7px}
+.sharemenu.on{display:block}
+.sharemenu button{display:flex;width:100%;align-items:baseline;gap:10px;background:none;border:none;color:var(--ink);
+  font-family:inherit;font-size:.86rem;text-align:left;padding:8px 9px;border-radius:8px;cursor:pointer}
+.sharemenu button:hover{background:var(--paper)}
+.sharemenu button i{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--muted);margin-left:auto}
+.sharemenu .mh{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);padding:5px 9px 6px}
+#shademe{position:fixed;inset:0;z-index:800;background:rgba(5,8,18,.84);backdrop-filter:blur(5px);
+  display:none;align-items:center;justify-content:center;padding:18px}
+#shademe.on{display:flex}
+.shbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+  padding:13px;max-width:min(1040px,95vw);display:flex;flex-direction:column;gap:11px}
+#shimg{display:block;max-width:100%;max-height:70vh;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--line)}
+.shrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.shrow .note{color:var(--muted);font-size:.76rem;font-family:"IBM Plex Mono",monospace;margin-right:auto}
+.shdl{display:inline-block;padding:9px 16px;border:none;border-radius:9px;background:var(--water);color:#0b1020;
+  font-family:inherit;font-weight:700;font-size:.88rem;cursor:pointer;text-decoration:none}
+.shcp{padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink);
+  font-family:inherit;font-size:.86rem;cursor:pointer}
+.shx{padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:none;color:var(--muted);
+  font-family:inherit;font-size:.86rem;cursor:pointer}
+
 @media (max-width:760px){
   #lakemap{position:static;display:block;width:100%;max-width:330px;margin:2px auto 6px;
     border:none;border-radius:0;background:none;padding:0}
@@ -127,6 +153,14 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
       <div class="ctrl">
         <button class="tbtn" id="playbtn" aria-label="Play or pause the animation"><svg id="playic" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3l16 9-16 9z"/></svg><span id="playlab">Play</span></button>
         <button class="tbtn on" id="livebtn">&#9679; Live</button>
+        <span class="sharewrap">
+          <button class="tbtn" id="sharebtn" aria-label="Save a high-resolution image of this moment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg><span id="sharelab">Save image</span></button>
+          <div class="sharemenu" id="sharemenu">
+            <div class="mh">Save this moment</div>
+            <button data-kind="wide">Wide <i>2400 &times; 1350</i></button>
+            <button data-kind="square">Square &plus; chart <i>1600 &times; 1600</i></button>
+          </div>
+        </span>
       </div>
       <div class="when" id="whenlab">&mdash;</div>
     </div>
@@ -168,6 +202,18 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
     <button class="fbclose" id="fbclose">Cancel</button>
   </div>
   <div class="fbmsg" id="fbmsg"></div>
+</div>
+
+<div id="shademe">
+  <div class="shbox">
+    <img id="shimg" alt="Share image preview of the Erie seiche">
+    <div class="shrow">
+      <span class="note" id="shnote"></span>
+      <button class="shcp" id="shcopy" hidden>Copy</button>
+      <a class="shdl" id="shdl" download>Download PNG</a>
+      <button class="shx" id="shclose">Close</button>
+    </div>
+  </div>
 </div>
 
 <footer>
@@ -567,6 +613,281 @@ async function load(first){
 }
 load(true);
 setInterval(() => { if (!playing) load(false); }, 6*60*1000);
+
+/* ---------- share poster ----------
+   Painted natively at poster scale rather than scraped off the page: the surface
+   is drawn once every 20 minutes back through a full 14-hour seiche period, so
+   the lake leaves motion trails behind the live line.                        */
+(function share(){
+  const btn = document.getElementById("sharebtn"), menu = document.getElementById("sharemenu"),
+        lab = document.getElementById("sharelab"), modal = document.getElementById("shademe"),
+        img = document.getElementById("shimg"), dl = document.getElementById("shdl"),
+        note = document.getElementById("shnote"), copy = document.getElementById("shcopy");
+
+  const U = 1200, X0 = 92, X1 = U - 92;
+  const TRAIL_SPAN = 14*60, TRAIL_STEP = 6, TRAIL_N = TRAIL_SPAN/TRAIL_STEP;
+  const PRESETS = {
+    wide:   {w:2400, h:1350, scene:675,  hz:.54, title:54, stat:50},
+    square: {w:1600, h:1600, scene:880,  hz:.50, title:60, stat:56}
+  };
+  const dfmt = new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"});
+  const hfmt = new Intl.DateTimeFormat("en-GB",{timeZone:"America/New_York",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
+
+  const lerp = (a,b,u) => a + (b-a)*u;
+  function rampRGB(u){                       /* 0 = 14 h ago, 1 = the most recent trail */
+    const S = [[0,[20,30,78]],[.40,[38,94,166]],[.72,[68,168,220]],[.92,[150,220,242]],[1,[255,236,194]]];
+    for (let i=0;i<S.length-1;i++){
+      if (u <= S[i+1][0]){
+        const f = (u - S[i][0])/(S[i+1][0] - S[i][0]);
+        return [0,1,2].map(k => Math.round(lerp(S[i][1][k], S[i+1][1][k], f)));
+      }
+    }
+    return S[S.length-1][1];
+  }
+
+  /* catmull-rom through the gauges, as canvas beziers */
+  function curve(ctx, pts){
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 0; i < pts.length-1; i++){
+      const p0 = pts[Math.max(0,i-1)], p1 = pts[i], p2 = pts[i+1], p3 = pts[Math.min(pts.length-1,i+2)];
+      ctx.bezierCurveTo(p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6,
+                        p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6, p2[0], p2[1]);
+    }
+  }
+  const smile = m => X0 + (m/AXIS_MI)*(X1-X0);
+
+  function surfaceAt(tt, hz, vs){
+    const pts = [];
+    for (const s of STATIONS){
+      const d = devAt(s, tt);
+      if (d !== null) pts.push([smile(s.mile), hz - d*vs]);
+    }
+    if (pts.length < 2) return null;
+    return [[0, pts[0][1]]].concat(pts, [[U, pts[pts.length-1][1]]]);
+  }
+
+  async function makePoster(kind){
+    const P = PRESETS[kind], S = P.w/U, UH = P.h/S, SC = P.scene;
+    const cv = document.createElement("canvas");
+    cv.width = P.w; cv.height = P.h;
+    const ctx = cv.getContext("2d");
+    ctx.scale(S, S);
+    ctx.textBaseline = "alphabetic";
+
+    function T(s, x, y, font, color, align, ls){
+      ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || "left";
+      if (ls) try{ ctx.letterSpacing = ls; }catch(e){}
+      ctx.fillText(s, x, y);
+      try{ ctx.letterSpacing = "0px"; }catch(e){}
+    }
+    const glow = (c, b) => { ctx.shadowColor = c; ctx.shadowBlur = b; };
+    const noglow = () => { ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; };
+
+    /* ---- the moment, and how far the lake moved around it ---- */
+    const t = TIMES[idx], dt = new Date(t*60000);
+    const b = devAt(BUFFALO, t), o = devAt(TOLEDO, t);
+    const tilt = (b === null || o === null) ? null : b - o;
+    const tiltStr = tilt === null ? "no data" : (tilt >= 0 ? "+" : "−") + Math.abs(tilt).toFixed(2) + " ft";
+    const tiltCol = tilt === null ? "#98a2ba" : (tilt >= 0 ? "#f0d072" : "#6fc3e8");
+    const tiltCap = tilt === null ? "gauges offline"
+      : Math.abs(tilt) < 0.15 ? "end to end. the lake is sitting level"
+      : tilt > 0 ? "end to end. piled up at the Buffalo end"
+      : "end to end. piled up at the Toledo end";
+
+    let peak = 0.12;
+    for (let k = 0; k < TRAIL_N; k++){
+      const tt = t - k*TRAIL_STEP;
+      for (const s of STATIONS){ const d = devAt(s, tt); if (d !== null) peak = Math.max(peak, Math.abs(d)); }
+    }
+    const HZ = Math.round(SC*P.hz), AMP = SC*0.125, vs = AMP/peak;
+    const bedTop = HZ + 12, bedBot = SC - 62;   /* keep the basin clear of the credit row */
+    const exag = Math.round(vs/((X1-X0)/(AXIS_MI*5280))/1000)*1000;
+
+    /* ---- sky ---- */
+    let g = ctx.createLinearGradient(0,0,0,HZ);
+    g.addColorStop(0, "#04060d"); g.addColorStop(1, "#0c1628");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, U, HZ);
+    ctx.fillStyle = "#0a1322"; ctx.fillRect(0, HZ, U, SC-HZ);
+
+    /* ---- water body under the live surface ---- */
+    const now = surfaceAt(t, HZ, vs);
+    if (!now) throw new Error("no data");
+    const waterPath = new Path2D();          /* Path2D takes the same moveTo/bezierCurveTo calls */
+    curve(waterPath, now);
+    waterPath.lineTo(U, SC); waterPath.lineTo(0, SC); waterPath.closePath();
+    g = ctx.createLinearGradient(0, HZ-AMP, 0, bedBot);
+    g.addColorStop(0, "#0f2f4c"); g.addColorStop(.22, "#081e33"); g.addColorStop(1, "#030a14");
+    ctx.fillStyle = g; ctx.fill(waterPath);
+
+    /* ---- the long exposure. every six minutes for fourteen hours, composited
+           additively, so the levels the lake dwelt on burn in brightest ---- */
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.globalCompositeOperation = "lighter";
+    for (let k = TRAIL_N - 1; k >= 0; k--){
+      const pts = surfaceAt(t - k*TRAIL_STEP, HZ, vs);
+      if (!pts) continue;
+      const u = 1 - k/TRAIL_N, c = rampRGB(u), a = 0.021 + 0.085*Math.pow(u, 2.6);
+      ctx.beginPath(); curve(ctx, pts);
+      ctx.strokeStyle = "rgba(" + c + "," + (a*0.30).toFixed(4) + ")";   /* halo */
+      ctx.lineWidth = 12; ctx.stroke();
+      ctx.strokeStyle = "rgba(" + c + "," + a.toFixed(4) + ")";          /* core */
+      ctx.lineWidth = 1.7; ctx.stroke();
+    }
+    ctx.globalCompositeOperation = "source-over";
+
+    /* ---- the live surface ---- */
+    ctx.beginPath(); curve(ctx, now);
+    glow("rgba(240,205,110,.55)", 22);
+    ctx.strokeStyle = "#f2d585"; ctx.lineWidth = 3.2; ctx.stroke();
+    noglow();
+
+    /* ---- lakebed over the water ---- */
+    const bed = BOTTOM.map(([f,dep]) => [f*U, bedTop + (dep/MAX_DEPTH)*(bedBot-bedTop)]);
+    ctx.beginPath(); curve(ctx, bed);
+    ctx.lineTo(U, SC); ctx.lineTo(0, SC); ctx.closePath();
+    ctx.fillStyle = "#03060d"; ctx.fill();
+    ctx.beginPath(); curve(ctx, bed);
+    ctx.strokeStyle = "rgba(84,124,184,.26)"; ctx.lineWidth = 1.3; ctx.stroke();
+
+    /* ---- gauges ---- */
+    const rowUp = HZ - AMP - 64, rowDn = HZ - AMP - 28;
+    STATIONS.forEach((s, i) => {
+      const d = devAt(s, t);
+      const x = smile(s.mile), row = (i % 2 === 0) ? rowUp : rowDn, vy = row + 17;
+      const on = d !== null, col = !on ? "#5c6683" : (d >= 0 ? "#f0d072" : "#6fc3e8");
+      const y = on ? HZ - d*vs : HZ;
+      ctx.beginPath(); ctx.moveTo(x, vy + 7); ctx.lineTo(x, y - 7);
+      ctx.strokeStyle = "rgba(150,170,215,.22)"; ctx.lineWidth = 1; ctx.stroke();
+      T(s.name, x, row, '600 13px "Public Sans",system-ui,sans-serif', on ? "#b9c4dd" : "#5f6982", "center");
+      T(on ? (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(2) + " ft" : "offline",
+        x, vy, '500 12.5px "IBM Plex Mono",monospace', col, "center");
+      if (!on) return;
+      glow(col, 14);
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fillStyle = col; ctx.fill();
+      noglow();
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.strokeStyle = "rgba(6,10,20,.85)"; ctx.lineWidth = 1.6; ctx.stroke();
+    });
+
+    /* ---- type over the sky ---- */
+    T("LAKE ERIE · TOLEDO TO BUFFALO · EIGHT NOAA GAUGES", X0, 58,
+      '500 12.5px "IBM Plex Mono",monospace', "#e8c85a", "left", "0.2em");
+    T("The Erie Seiche", X0, 66 + P.title,
+      '700 ' + P.title + 'px "Zilla Slab",Georgia,serif', "#eef2fa");
+    T("Wind tips the lake, then the whole thing rocks back, about every 14 hours.",
+      X0, 66 + P.title + 32, '400 16px "Public Sans",system-ui,sans-serif', "#9aa5bd");
+    T(fmtDay.format(dt) + " · " + fmtTime.format(dt) + " ET", X1, 58,
+      '400 13px "IBM Plex Mono",monospace', "#9aa5bd", "right");
+    glow(tilt === null ? "transparent" : (tilt >= 0 ? "rgba(240,205,110,.35)" : "rgba(111,195,232,.35)"), 26);
+    T(tiltStr, X1, 66 + P.title, '500 ' + P.stat + 'px "IBM Plex Mono",monospace', tiltCol, "right");
+    noglow();
+    T(tiltCap, X1, 66 + P.title + 32, '400 14px "Public Sans",system-ui,sans-serif', "#9aa5bd", "right");
+
+    /* ---- trail legend, down in the dark ---- */
+    const lgY = SC - 74, lgW = 156;
+    g = ctx.createLinearGradient(X0, 0, X0 + lgW, 0);
+    for (let i = 0; i <= 10; i++){ const c = rampRGB(i/10); g.addColorStop(i/10, "rgb(" + c + ")"); }
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(X0, lgY, lgW, 6, 3); else ctx.rect(X0, lgY, lgW, 6);
+    ctx.fill();
+    T("14 H AGO", X0, lgY - 11, '400 10.5px "IBM Plex Mono",monospace', "#7b859f", "left", "0.12em");
+    T("NOW", X0 + lgW, lgY - 11, '500 10.5px "IBM Plex Mono",monospace', "#e8c85a", "right", "0.12em");
+    T("every surface the lake held over one full seiche period",
+      X0 + lgW + 18, lgY + 6, '400 12px "Public Sans",system-ui,sans-serif', "#6d7791");
+
+    /* ---- square: five-day tilt strip below the scene ---- */
+    if (kind === "square"){
+      ctx.fillStyle = "#04060d"; ctx.fillRect(0, SC, U, UH - SC);
+      T("FIVE DAYS OF END-TO-END TILT · BUFFALO MINUS TOLEDO", X0, SC + 54,
+        '500 11.5px "IBM Plex Mono",monospace', "#6d7791", "left", "0.16em");
+      const sy0 = SC + 74, sy1 = UH - 104, mid = (sy0+sy1)/2;
+      let m = 0.3;
+      for (const v of sloshDiffs) if (v !== null) m = Math.max(m, Math.abs(v));
+      m *= 1.12;
+      const sx = i => X0 + (i/(TIMES.length-1))*(X1-X0), syv = v => mid - v/m*(sy1-sy0)/2;
+      ctx.beginPath(); ctx.moveTo(X0, mid); ctx.lineTo(X1, mid);
+      ctx.strokeStyle = "rgba(150,170,215,.2)"; ctx.lineWidth = 1; ctx.stroke();
+      for (let i = 1; i < TIMES.length; i++){
+        if (fmtDay.format(new Date(TIMES[i-1]*60000)) === fmtDay.format(new Date(TIMES[i]*60000))) continue;
+        ctx.beginPath(); ctx.moveTo(sx(i), sy0); ctx.lineTo(sx(i), sy1);
+        ctx.strokeStyle = "rgba(150,170,215,.09)"; ctx.stroke();
+        T(fmtDay.format(new Date(TIMES[i]*60000)), sx(i)+6, sy1+18,
+          '400 11px "IBM Plex Mono",monospace', "#5f6982");
+      }
+      let seg = [];
+      const draw = () => {
+        if (seg.length < 2) return;
+        ctx.beginPath(); ctx.moveTo(seg[0][0], seg[0][1]);
+        for (const p of seg.slice(1)) ctx.lineTo(p[0], p[1]);
+        glow("rgba(91,168,212,.45)", 12);
+        ctx.strokeStyle = "#7ec2e4"; ctx.lineWidth = 2; ctx.stroke();
+        noglow();
+      };
+      sloshDiffs.forEach((v, i) => {
+        if (v === null){ draw(); seg = []; return; }
+        seg.push([sx(i), syv(v)]);
+      });
+      draw();
+      const cx = sx(idx);
+      ctx.beginPath(); ctx.moveTo(cx, sy0); ctx.lineTo(cx, sy1);
+      ctx.strokeStyle = "rgba(232,200,90,.55)"; ctx.lineWidth = 1.5; ctx.stroke();
+      if (sloshDiffs[idx] !== null){
+        glow("rgba(240,205,110,.7)", 14);
+        ctx.beginPath(); ctx.arc(cx, syv(sloshDiffs[idx]), 4.5, 0, 7); ctx.fillStyle = "#f2d585"; ctx.fill();
+        noglow();
+      }
+      T("+" + m.toFixed(1), X0 - 10, sy0 + 10, '400 11px "IBM Plex Mono",monospace', "#5f6982", "right");
+      T("−" + m.toFixed(1), X0 - 10, sy1, '400 11px "IBM Plex Mono",monospace', "#5f6982", "right");
+    }
+
+    /* ---- credit ---- */
+    const fy = UH - 30;
+    T("ryansajdak.com/greatlakes/erie/seiche", X0, fy, '500 13.5px "IBM Plex Mono",monospace', "#5ba8d4");
+    T("NOAA CO-OPS gauges · departure from each 5-day mean · vertical exaggeration "
+      + exag.toLocaleString() + "× · bed schematic",
+      X1, fy, '400 11.5px "IBM Plex Mono",monospace', "#5f6982", "right");
+
+    const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+    return {blob, name: "erie-seiche-" + dfmt.format(dt) + "-" + hfmt.format(dt).replace(":","") + "-" + kind + ".png",
+            w: P.w, h: P.h};
+  }
+
+  let objURL = null, busy = false;
+  async function run(kind){
+    if (busy) return;
+    busy = true; menu.classList.remove("on");
+    const was = lab.textContent; lab.textContent = "Rendering…";
+    try{
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const r = await makePoster(kind);
+      if (objURL) URL.revokeObjectURL(objURL);
+      objURL = URL.createObjectURL(r.blob);
+      img.src = objURL; dl.href = objURL; dl.download = r.name;
+      note.textContent = r.w + " × " + r.h + " · " + Math.round(r.blob.size/1024) + " KB";
+      copy.hidden = !(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write);
+      copy.textContent = "Copy";
+      copy.onclick = async () => {
+        try{
+          await navigator.clipboard.write([new ClipboardItem({"image/png": r.blob})]);
+          copy.textContent = "Copied";
+        }catch(e){ copy.textContent = "Copy failed"; }
+      };
+      modal.classList.add("on");
+    }catch(e){
+      lab.textContent = "Failed";
+      setTimeout(() => lab.textContent = was, 2200);
+      busy = false; return;
+    }
+    lab.textContent = was; busy = false;
+  }
+
+  btn.addEventListener("click", e => { e.stopPropagation(); menu.classList.toggle("on"); });
+  document.addEventListener("click", e => { if (!menu.contains(e.target)) menu.classList.remove("on"); });
+  menu.querySelectorAll("button[data-kind]").forEach(b => b.addEventListener("click", () => run(b.dataset.kind)));
+  document.getElementById("shclose").addEventListener("click", () => modal.classList.remove("on"));
+  modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("on"); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape"){ modal.classList.remove("on"); menu.classList.remove("on"); } });
+})();
 
 /* ---------- feedback ---------- */
 (function feedback(){
