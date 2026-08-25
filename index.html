@@ -115,7 +115,9 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
 #shademe.on{display:flex}
 .shbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
   padding:13px;max-width:min(1040px,95vw);display:flex;flex-direction:column;gap:11px}
-#shimg{display:block;max-width:100%;max-height:70vh;width:auto;margin:0 auto;border-radius:8px;border:1px solid var(--line)}
+#shstage{display:flex;align-items:center;justify-content:center}
+#shimg,#shvid,#shstage canvas{display:block;max-width:100%;max-height:70vh;width:auto;height:auto;
+  margin:0 auto;border-radius:8px;border:1px solid var(--line);background:#04060d}
 .shrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .shrow .note{color:var(--muted);font-size:.76rem;font-family:"IBM Plex Mono",monospace;margin-right:auto}
 .shdl{display:inline-block;padding:9px 16px;border:none;border-radius:9px;background:var(--water);color:#0b1020;
@@ -159,6 +161,8 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
             <div class="mh">Save this moment</div>
             <button data-kind="wide">Wide <i>2400 &times; 1350</i></button>
             <button data-kind="square">Square &plus; chart <i>1600 &times; 1600</i></button>
+            <div class="mh" style="padding-top:9px">Record the slosh</div>
+            <button data-kind="movie">Movie, no text <i>1920 &times; 1080</i></button>
           </div>
         </span>
       </div>
@@ -206,7 +210,10 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
 
 <div id="shademe">
   <div class="shbox">
-    <img id="shimg" alt="Share image preview of the Erie seiche">
+    <div id="shstage">
+      <img id="shimg" alt="Share image preview of the Erie seiche">
+      <video id="shvid" controls loop playsinline hidden></video>
+    </div>
     <div class="shrow">
       <span class="note" id="shnote"></span>
       <button class="shcp" id="shcopy" hidden>Copy</button>
@@ -622,7 +629,8 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
   const btn = document.getElementById("sharebtn"), menu = document.getElementById("sharemenu"),
         lab = document.getElementById("sharelab"), modal = document.getElementById("shademe"),
         img = document.getElementById("shimg"), dl = document.getElementById("shdl"),
-        note = document.getElementById("shnote"), copy = document.getElementById("shcopy");
+        note = document.getElementById("shnote"), copy = document.getElementById("shcopy"),
+        stage = document.getElementById("shstage"), vid = document.getElementById("shvid");
 
   const U = 1200, X0 = 92, X1 = U - 92;
   const TRAIL_SPAN = 14*60, TRAIL_STEP = 6, TRAIL_N = TRAIL_SPAN/TRAIL_STEP;
@@ -655,6 +663,26 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
     }
   }
   const smile = m => X0 + (m/AXIS_MI)*(X1-X0);
+
+  /* Deviation at a fractional position in TIMES. The gauges only report every six
+     minutes; without this the surface snaps from reading to reading and the movie
+     stutters no matter how high the frame rate is. */
+  function devLerp(s, fi){
+    const a = Math.max(0, Math.floor(fi)), b = Math.min(TIMES.length-1, a+1);
+    const va = devAt(s, TIMES[a]), vb = devAt(s, TIMES[b]);
+    if (va === null) return vb;
+    if (vb === null) return va;
+    return va + (vb - va)*(fi - a);
+  }
+  function surfaceLerp(fi, hz, vs){
+    const pts = [];
+    for (const s of STATIONS){
+      const d = devLerp(s, fi);
+      if (d !== null) pts.push([smile(s.mile), hz - d*vs]);
+    }
+    if (pts.length < 2) return null;
+    return [[0, pts[0][1]]].concat(pts, [[U, pts[pts.length-1][1]]]);
+  }
 
   function surfaceAt(tt, hz, vs){
     const pts = [];
@@ -852,41 +880,245 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
             w: P.w, h: P.h};
   }
 
+
+  /* ---------- movie: 16:9, no type, the lake and nothing else ----------
+     The stills stack 140 surfaces per frame. A movie cannot afford that, so the
+     trails live in their own buffer that fades a little each frame and takes one
+     fresh stroke: the same long exposure, accumulated over time instead of
+     redrawn. Fade rate is solved so a surface stays visible for 14 hours of lake
+     time whatever the playback speed.                                        */
+  const MOV = {w:1920, h:1080, fps:60, secs:24, bits:12e6};
+  let movAbort = false;
+
+  function pickMime(){
+    if (!window.MediaRecorder) return "";
+    for (const m of ['video/mp4;codecs="avc1.4d002a"','video/mp4;codecs=avc1','video/mp4',
+                     'video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'])
+      if (MediaRecorder.isTypeSupported(m)) return m;
+    return "";
+  }
+
+  async function makeMovie(onprog){
+    const mime = pickMime();
+    if (!mime) throw new Error("this browser cannot record canvas video");
+    const U = 1200, S = MOV.w/U, UH = MOV.h/S;
+
+    const cv = document.createElement("canvas");
+    cv.width = MOV.w; cv.height = MOV.h;
+    const ctx = cv.getContext("2d");
+    const tr = document.createElement("canvas");
+    tr.width = MOV.w; tr.height = MOV.h;
+    const tc = tr.getContext("2d");
+    tc.scale(S, S); tc.lineCap = "round"; tc.lineJoin = "round";
+
+    /* one fixed vertical scale for the whole sweep, so the amplitude never pulses */
+    const HZ = Math.round(UH*0.54), AMP = UH*0.125, vs = AMP/Math.max(maxDev, 0.12);
+    const bedTop = HZ + 12, bedBot = UH - 4;
+    const bed = BOTTOM.map(([f,dep]) => [f*U, bedTop + (dep/MAX_DEPTH)*(bedBot-bedTop)]);
+
+    const NF = MOV.fps*MOV.secs, spf = (TIMES.length-1)/NF;
+    const f14 = (14*60)/(spf*STEP), fade = 1 - Math.pow(0.02, 1/f14);
+    /* A surface that sits still converges to alpha = strokeAlpha/fade. Picking the
+       stroke alpha by eye blew that past 1 and clipped the ribbon to white, so solve
+       it from the fade instead: a motionless line lands just under saturation and
+       everything moving stays blue. */
+    const coreA = 1.12*fade, haloA = coreA*0.46;
+
+    function trailStep(i){
+      const pts = surfaceLerp(Math.max(0, Math.min(TIMES.length-1, i)), HZ, vs);
+      tc.globalCompositeOperation = "destination-out";
+      tc.fillStyle = "rgba(0,0,0," + fade.toFixed(4) + ")";
+      tc.fillRect(0, 0, U, UH);
+      tc.globalCompositeOperation = "lighter";
+      if (pts){
+        tc.beginPath(); curve(tc, pts);
+        tc.strokeStyle = "rgba(58,142,205," + haloA.toFixed(4) + ")"; tc.lineWidth = 15; tc.stroke();
+        tc.strokeStyle = "rgba(116,192,236," + coreA.toFixed(4) + ")"; tc.lineWidth = 2; tc.stroke();
+      }
+      return pts;
+    }
+
+    function frame(i){
+      const pts = trailStep(i);
+      ctx.setTransform(S, 0, 0, S, 0, 0);
+      let g = ctx.createLinearGradient(0, 0, 0, HZ);
+      g.addColorStop(0, "#04060d"); g.addColorStop(1, "#0c1628");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, U, HZ);
+      ctx.fillStyle = "#0a1322"; ctx.fillRect(0, HZ, U, UH-HZ);
+      if (pts){
+        const wp = new Path2D();
+        curve(wp, pts); wp.lineTo(U, UH); wp.lineTo(0, UH); wp.closePath();
+        g = ctx.createLinearGradient(0, HZ-AMP, 0, bedBot);
+        g.addColorStop(0, "#0f2f4c"); g.addColorStop(.22, "#081e33"); g.addColorStop(1, "#030a14");
+        ctx.fillStyle = g; ctx.fill(wp);
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0);                 /* trails are already at device scale */
+      ctx.globalCompositeOperation = "lighter";
+      ctx.drawImage(tr, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.setTransform(S, 0, 0, S, 0, 0);
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+      if (pts){
+        ctx.beginPath(); curve(ctx, pts);
+        ctx.shadowColor = "rgba(236,206,140,.28)"; ctx.shadowBlur = 9;
+        ctx.strokeStyle = "rgba(238,208,142,.62)"; ctx.lineWidth = 2.1; ctx.stroke();
+        ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
+      }
+      ctx.beginPath(); curve(ctx, bed);
+      ctx.lineTo(U, UH); ctx.lineTo(0, UH); ctx.closePath();
+      ctx.fillStyle = "#03060d"; ctx.fill();
+      ctx.beginPath(); curve(ctx, bed);
+      ctx.strokeStyle = "rgba(84,124,184,.26)"; ctx.lineWidth = 1.3; ctx.stroke();
+
+      /* type: a title, the two ends of the lake, and a clock that runs with the sweep */
+      const a = Math.max(0, Math.floor(i)), bIdx = Math.min(TIMES.length-1, a+1);
+      const dt = new Date((TIMES[a] + (TIMES[bIdx]-TIMES[a])*(i-a))*60000);
+      ctx.textAlign = "left";
+      ctx.font = '500 11px "IBM Plex Mono",monospace';
+      try{ ctx.letterSpacing = "0.2em"; }catch(e){}
+      ctx.fillStyle = "#c9a94a"; ctx.fillText("LAKE ERIE", 54, 50);
+      try{ ctx.letterSpacing = "0px"; }catch(e){}
+      ctx.font = '700 38px "Zilla Slab",Georgia,serif';
+      ctx.fillStyle = "#e7ecf6"; ctx.fillText("The Erie Seiche", 54, 92);
+      ctx.textAlign = "right";
+      ctx.font = '400 13px "IBM Plex Mono",monospace';
+      ctx.fillStyle = "#8b96ad";
+      try{ ctx.letterSpacing = "0.1em"; }catch(e){}
+      ctx.fillText(fmtDay.format(dt), U - 54, 64);
+      try{ ctx.letterSpacing = "0px"; }catch(e){}
+      let clock = fmtTime.format(dt);
+      if (clock.indexOf(":") === 1) clock = " " + clock;   /* monospace pad, so 9:05 and 11:05 sit still */
+      ctx.font = '500 24px "IBM Plex Mono",monospace';
+      ctx.fillStyle = "#c3cde2";
+      ctx.fillText(clock + " ET", U - 54, 94);
+      const ly = HZ - AMP - 34;
+      ctx.font = '500 12px "IBM Plex Mono",monospace';
+      ctx.fillStyle = "rgba(150,166,196,.8)";
+      try{ ctx.letterSpacing = "0.22em"; }catch(e){}
+      ctx.textAlign = "left";  ctx.fillText("TOLEDO",  54, ly);
+      ctx.textAlign = "right"; ctx.fillText("BUFFALO", U - 54, ly);
+      try{ ctx.letterSpacing = "0px"; }catch(e){}
+    }
+
+    /* charge the buffer over the first 14 hours before the tape rolls */
+    const pre = Math.ceil(f14);
+    for (let k = 0; k < pre; k++) trailStep(k*spf);
+    const i0 = pre*spf, span = (TIMES.length-1) - i0;
+    frame(i0);
+
+    stage.innerHTML = ""; stage.appendChild(cv);
+    modal.classList.add("on");
+
+    /* captureStream(0) hands the recorder exactly the frames we ask it to take, so a
+       frame that runs long stretches the clip rather than being dropped. Jank shows
+       up as a slightly longer movie, never as a stutter. */
+    const strm = cv.captureStream(0), track = strm.getVideoTracks()[0];
+    const rec = new MediaRecorder(strm, {mimeType: mime, videoBitsPerSecond: MOV.bits});
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(res => rec.onstop = res);
+    rec.start();
+
+    /* Pace on the wall clock, not on rAF ticks. rAF fires at the display's refresh
+       rate, so counting ticks made the sweep run twice as fast on a 120 Hz screen.
+       The lake advances with n, so a late frame stretches the clip instead of
+       skipping ahead: never jumpy, occasionally a little longer. */
+    const t0 = performance.now(), step = span/NF, ivl = 1000/MOV.fps;
+    let n = 0, due = t0;
+    await new Promise(res => {
+      (function tick(){
+        const now = performance.now();
+        if (now >= due - 4){
+          frame(i0 + step*n);
+          track.requestFrame();
+          n++;
+          due += ivl;
+          if (now > due + ivl*3) due = now + ivl;        /* fell behind, resync */
+          onprog(n/NF);
+          if (n >= NF || movAbort) return res();
+        }
+        requestAnimationFrame(tick);
+      })();
+    });
+    const real = (performance.now()-t0)/1000;
+    await new Promise(r => setTimeout(r, 300));
+    rec.stop();
+    await stopped;
+    if (movAbort) throw new Error("cancelled");
+    return {blob: new Blob(chunks, {type: mime}), secs: real, fps: n/real,
+            ext: mime.indexOf("mp4") >= 0 ? "mp4" : "webm"};
+  }
+
   let objURL = null, busy = false;
+  const stamp = () => {
+    const d = new Date(TIMES[idx]*60000);
+    return dfmt.format(d) + "-" + hfmt.format(d).replace(":","");
+  };
+  function show(el){
+    stage.innerHTML = "";
+    stage.appendChild(el);
+    img.hidden = el !== img; vid.hidden = el !== vid;
+  }
+
   async function run(kind){
     if (busy) return;
-    busy = true; menu.classList.remove("on");
-    const was = lab.textContent; lab.textContent = "Rendering…";
+    busy = true; movAbort = false; menu.classList.remove("on");
+    const was = lab.textContent;
     try{
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
-      const r = await makePoster(kind);
       if (objURL) URL.revokeObjectURL(objURL);
-      objURL = URL.createObjectURL(r.blob);
-      img.src = objURL; dl.href = objURL; dl.download = r.name;
-      note.textContent = r.w + " × " + r.h + " · " + Math.round(r.blob.size/1024) + " KB";
-      copy.hidden = !(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write);
-      copy.textContent = "Copy";
-      copy.onclick = async () => {
-        try{
-          await navigator.clipboard.write([new ClipboardItem({"image/png": r.blob})]);
-          copy.textContent = "Copied";
-        }catch(e){ copy.textContent = "Copy failed"; }
-      };
-      modal.classList.add("on");
+
+      if (kind === "movie"){
+        vid.removeAttribute("src");
+        note.textContent = "recording…";
+        dl.removeAttribute("href"); dl.textContent = "Recording…";
+        const r = await makeMovie(p => {
+          const pct = Math.round(p*100);
+          lab.textContent = "Recording " + pct + "%";
+          note.textContent = "recording " + pct + "% · " + MOV.w + " × " + MOV.h + " · " + MOV.secs + "s";
+        });
+        objURL = URL.createObjectURL(r.blob);
+        vid.src = objURL; show(vid); vid.play().catch(() => {});
+        dl.href = objURL; dl.download = "erie-seiche-" + stamp() + "-movie." + r.ext;
+        dl.textContent = "Download " + r.ext.toUpperCase();
+        note.textContent = MOV.w + " × " + MOV.h + " · " + r.secs.toFixed(1) + "s @ "
+          + Math.round(r.fps) + " fps · " + (r.blob.size/1048576).toFixed(1) + " MB · " + r.ext.toUpperCase();
+        copy.hidden = true;
+      }else{
+        lab.textContent = "Rendering…";
+        const r = await makePoster(kind);
+        objURL = URL.createObjectURL(r.blob);
+        img.src = objURL; show(img);
+        dl.href = objURL; dl.download = r.name;
+        dl.textContent = "Download PNG";
+        note.textContent = r.w + " × " + r.h + " · " + Math.round(r.blob.size/1024) + " KB";
+        copy.hidden = !(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write);
+        copy.textContent = "Copy";
+        copy.onclick = async () => {
+          try{
+            await navigator.clipboard.write([new ClipboardItem({"image/png": r.blob})]);
+            copy.textContent = "Copied";
+          }catch(e){ copy.textContent = "Copy failed"; }
+        };
+        modal.classList.add("on");
+      }
     }catch(e){
-      lab.textContent = "Failed";
-      setTimeout(() => lab.textContent = was, 2200);
+      modal.classList.remove("on");
+      lab.textContent = movAbort ? was : "Failed";
+      if (!movAbort) setTimeout(() => lab.textContent = was, 2400);
       busy = false; return;
     }
     lab.textContent = was; busy = false;
   }
 
+  function closeModal(){ movAbort = true; if (!vid.hidden) vid.pause(); modal.classList.remove("on"); }
+
   btn.addEventListener("click", e => { e.stopPropagation(); menu.classList.toggle("on"); });
   document.addEventListener("click", e => { if (!menu.contains(e.target)) menu.classList.remove("on"); });
   menu.querySelectorAll("button[data-kind]").forEach(b => b.addEventListener("click", () => run(b.dataset.kind)));
-  document.getElementById("shclose").addEventListener("click", () => modal.classList.remove("on"));
-  modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("on"); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape"){ modal.classList.remove("on"); menu.classList.remove("on"); } });
+  document.getElementById("shclose").addEventListener("click", closeModal);
+  modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape"){ closeModal(); menu.classList.remove("on"); } });
 })();
 
 /* ---------- feedback ---------- */
