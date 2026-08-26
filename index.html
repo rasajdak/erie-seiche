@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Erie Seiche &mdash; Watch Lake Erie Slosh, Live</title>
-<meta name="description" content="Lake Erie tilts. Strong winds pile water up at one end of the lake, and when they let go the whole lake sloshes back and forth for days. This page reads eight NOAA water-level gauges from Toledo to Buffalo every six minutes and animates the lake's surface, live.">
+<meta name="description" content="Lake Erie tilts. Strong winds pile water up at one end of the lake, and when they let go the whole lake sloshes back and forth for days. This page reads fourteen water-level gauges from Toledo to Buffalo, American and Canadian, every few minutes and animates the lake's surface in 3-D, live.">
 <link rel="canonical" href="https://ryansajdak.com/greatlakes/erie/seiche/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ryansajdak.com">
 <meta property="og:title" content="The Erie Seiche: watch Lake Erie slosh, live">
-<meta property="og:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. Live cross-section animated from eight NOAA gauges, Toledo to Buffalo.">
+<meta property="og:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. The live lake surface in 3-D, from fourteen gauges on both shores.">
 <meta property="og:url" content="https://ryansajdak.com/greatlakes/erie/seiche/">
 <meta property="og:image" content="https://ryansajdak.com/greatlakes/erie/seiche/preview.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="The Erie Seiche: watch Lake Erie slosh, live">
-<meta name="twitter:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. Live from eight NOAA gauges.">
+<meta name="twitter:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. Live from fourteen gauges on both shores.">
 <meta name="twitter:image" content="https://ryansajdak.com/greatlakes/erie/seiche/preview.png">
 <meta name="theme-color" content="#0b1020">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1020'/%3E%3Cpath d='M12 62 Q 26 46 40 58 T 68 58 T 96 54 L 96 88 L 12 88 Z' fill='%235ba8d4'/%3E%3Cpath d='M12 56 Q 26 40 40 52 T 68 52 T 96 48' stroke='%23e8c85a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -55,6 +55,8 @@ button.tbtn:hover{border-color:var(--water);color:var(--water)}
 button.tbtn.on{border-color:var(--gold);color:var(--gold)}
 button.tbtn svg{width:11px;height:11px;display:block}
 .vizwrap{position:relative}
+.lakewrap{position:relative;background:#080d18}
+#lake3d{display:block;width:100%;height:auto;cursor:grab;touch-action:none}
 #xsec{display:block;width:100%;height:auto}
 #lakemap{position:absolute;left:16px;bottom:46px;width:min(26%,240px);height:auto;pointer-events:auto;
   background:color-mix(in srgb,var(--paper) 72%,transparent);border:1px solid var(--line);border-radius:10px;
@@ -101,15 +103,15 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
 
 /* ---- share poster ---- */
 .sharewrap{position:relative}
-.sharemenu{position:absolute;z-index:700;top:100%;left:0;margin-top:6px;display:none;min-width:230px;
+.sharemenu{position:absolute;z-index:700;top:100%;left:0;margin-top:6px;display:none;min-width:308px;
   background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:7px}
 .sharemenu.on{display:block}
 .sharemenu button{display:flex;width:100%;align-items:baseline;gap:10px;background:none;border:none;color:var(--ink);
   font-family:inherit;font-size:.86rem;text-align:left;padding:8px 9px;border-radius:8px;cursor:pointer}
 .sharemenu button:hover{background:var(--paper)}
-.sharemenu button i{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--muted);margin-left:auto}
+.sharemenu button i{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--muted);margin-left:auto;padding-left:14px;white-space:nowrap}
 .sharemenu .mh{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--muted);padding:5px 9px 6px}
+  color:var(--muted);padding:5px 9px 6px;white-space:nowrap}
 #shademe{position:fixed;inset:0;z-index:800;background:rgba(5,8,18,.84);backdrop-filter:blur(5px);
   display:none;align-items:center;justify-content:center;padding:18px}
 #shademe.on{display:flex}
@@ -131,6 +133,7 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
   #lakemap{position:static;display:block;width:100%;max-width:330px;margin:2px auto 6px;
     border:none;border-radius:0;background:none;padding:0}
   .cardhead .when{margin-left:0;width:100%}
+  .ctrl{flex-wrap:wrap}
   .stat{font-size:.82rem;white-space:normal;line-height:1.4}
 }
 </style>
@@ -145,24 +148,40 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
     <h1>The Erie Seiche</h1>
     <span class="stat" id="tiltpill">tilt: &mdash;</span>
   </div>
-  <p class="sub">Lake Erie is long, shallow, and pointed straight into the prevailing southwest wind &mdash; which makes it the sloshiest big lake on Earth. A hard blow piles water up at Buffalo while the Toledo end drains; when the wind lets go, the whole lake rocks back and forth with a natural rhythm of about <b>14 hours</b>, sometimes for days. This page reads all <b>eight NOAA water-level gauges</b> around the lake every six minutes and animates the surface, hugely exaggerated. Drag the timeline, or press play and watch the lake breathe.</p>
+  <p class="sub">Lake Erie is long, shallow, and pointed straight into the prevailing southwest wind &mdash; which makes it the sloshiest big lake on Earth. A hard blow piles water up at Buffalo while the Toledo end drains; when the wind lets go, the whole lake rocks back and forth with a natural rhythm of about <b>14 hours</b>, sometimes for days. This page reads <b>fourteen water-level gauges</b> ringing the lake, American and Canadian, every few minutes and rebuilds the surface, hugely exaggerated: the whole lake seen from above, and a cross-section end to end. Spin the lake, drag the timeline, or press play and watch it breathe.</p>
 </header>
 
 <main>
   <div class="card">
     <div class="cardhead">
-      <h2>The lake in cross-section &middot; Toledo &rarr; Buffalo</h2>
+      <h2>The lake from above &middot; the surface, in three dimensions</h2>
       <div class="ctrl">
         <button class="tbtn" id="playbtn" aria-label="Play or pause the animation"><svg id="playic" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3l16 9-16 9z"/></svg><span id="playlab">Play</span></button>
         <button class="tbtn on" id="livebtn">&#9679; Live</button>
+        <button class="tbtn" id="resetview" aria-label="Return the lake to the default viewpoint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Reset view</button>
+      </div>
+      <div class="when" id="whenlab3">&mdash;</div>
+    </div>
+    <div class="lakewrap">
+      <canvas id="lake3d" width="1000" height="470" aria-label="Three-dimensional view of Lake Erie's water surface, tilted by the seiche"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead">
+      <h2>The lake in cross-section &middot; Toledo &rarr; Buffalo</h2>
+      <div class="ctrl">
         <span class="sharewrap">
           <button class="tbtn" id="sharebtn" aria-label="Save a high-resolution image of this moment"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg><span id="sharelab">Save image</span></button>
           <div class="sharemenu" id="sharemenu">
             <div class="mh">Save this moment</div>
-            <button data-kind="wide">Wide <i>2400 &times; 1350</i></button>
+            <button data-kind="lake3d">The lake in 3-D <i>2400 &times; 1350</i></button>
+            <button data-kind="wide">Cross-section, wide <i>2400 &times; 1350</i></button>
             <button data-kind="square">Square &plus; chart <i>1600 &times; 1600</i></button>
-            <div class="mh" style="padding-top:9px">Record the slosh</div>
-            <button data-kind="movie">Movie, no text <i>1920 &times; 1080</i></button>
+            <div class="mh" style="padding-top:9px">Record the slosh &middot; 1920 &times; 1080</div>
+            <button data-kind="movieAB">Movie &middot; both views <i>24s</i></button>
+            <button data-kind="movie3d">Movie &middot; the lake in 3-D <i>24s</i></button>
+            <button data-kind="movie">Movie &middot; cross-section <i>24s</i></button>
           </div>
         </span>
       </div>
@@ -224,24 +243,38 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
 </div>
 
 <footer>
-  <b>Data:</b> <a href="https://tidesandcurrents.noaa.gov/" target="_blank" rel="noopener">NOAA CO-OPS</a> water-level gauges (6-minute preliminary data, feet above Low Water Datum, IGLD&nbsp;85), refreshed every 6 minutes &middot; lake outline from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>. The cross-section shows each gauge's departure from its own 5-day mean, at the exaggeration printed under the chart; the bottom profile is schematic. Seiche history: NOAA, NWS Buffalo, Buffalo History Gazette. <span style="font-family:'IBM Plex Mono',monospace;font-size:.68rem">Part of <a href="https://ryansajdak.com/">ryansajdak.com</a> &middot; see also <a href="../../floor/#erie">the floor of Lake Erie</a>.</span>
+  <b>Data:</b> Eight <a href="https://tidesandcurrents.noaa.gov/" target="_blank" rel="noopener">NOAA CO-OPS</a> gauges on the American shore (6-minute preliminary data) and six <a href="https://tides.gc.ca/" target="_blank" rel="noopener">Canadian Hydrographic Service</a> gauges on the Canadian one (3-minute data via the DFO IWLS API, metres converted to feet), all on the same Low Water Datum, IGLD&nbsp;85, refreshed every 6 minutes &middot; lake outline from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>. Both views show departures from each gauge's own 5-day mean. Because gauges sit on both shores, the surface is fitted as a plane at each point along the lake (a level plus a cross-lake tilt), so the cross-section line is the level down the lake's centreline and the dots are the individual gauges, which need not lie on it. The bottom profile is schematic. Seiche history: NOAA, NWS Buffalo, Buffalo History Gazette. <span style="font-family:'IBM Plex Mono',monospace;font-size:.68rem">Part of <a href="https://ryansajdak.com/">ryansajdak.com</a> &middot; see also <a href="../../floor/#erie">the floor of Lake Erie</a>.</span>
 </footer>
 
 <script>
 "use strict";
 
-/* ---------- stations, west to east ---------- */
+/* ---------- stations, west to east ----------
+   The whole north shore of Erie is Canada, so half the lake used to be
+   guesswork. The Canadian Hydrographic Service publishes its gauges through
+   the IWLS API, in metres above the same IGLD 85 low-water datum NOAA uses,
+   every three minutes, with an open CORS policy. Adding six of them fills in
+   the north shore and, more usefully, puts a gauge on the far side of the
+   lake from nearly every American one -- which is what lets the surface be
+   fitted as a plane instead of a line. */
 const STATIONS = [
-  {id:"9063085", name:"Toledo",         st:"OH", lat:41.6936, lon:-83.4723},
-  {id:"9063090", name:"Fermi",          st:"MI", lat:41.9600, lon:-83.2567},
-  {id:"9063079", name:"Marblehead",     st:"OH", lat:41.5436, lon:-82.7314},
-  {id:"9063063", name:"Cleveland",      st:"OH", lat:41.5409, lon:-81.6355},
-  {id:"9063053", name:"Fairport",       st:"OH", lat:41.7598, lon:-81.2811},
-  {id:"9063038", name:"Erie",           st:"PA", lat:42.1539, lon:-80.0758},
-  {id:"9063028", name:"Sturgeon Pt",    st:"NY", lat:42.6913, lon:-79.0473},
-  {id:"9063020", name:"Buffalo",        st:"NY", lat:42.8774, lon:-78.8905}
+  {id:"9063085",                 src:"noaa", name:"Toledo",        short:"Toledo",     st:"OH", lat:41.6936, lon:-83.4723},
+  {id:"9063090",                 src:"noaa", name:"Fermi",         short:"Fermi",      st:"MI", lat:41.9600, lon:-83.2567},
+  {id:"5cebf1e43d0f4a073c4bc3be", src:"chs", name:"Bar Point",     short:"Bar Pt",     st:"ON", lat:42.0617, lon:-83.1150},
+  {id:"9063079",                 src:"noaa", name:"Marblehead",    short:"Marblehead", st:"OH", lat:41.5436, lon:-82.7314},
+  {id:"5cebf1e43d0f4a073c4bc3c0", src:"chs", name:"Kingsville",    short:"Kingsville", st:"ON", lat:42.0269, lon:-82.7348},
+  {id:"9063063",                 src:"noaa", name:"Cleveland",     short:"Cleveland",  st:"OH", lat:41.5409, lon:-81.6355},
+  {id:"5cebf1e43d0f4a073c4bc3c2", src:"chs", name:"Erieau",        short:"Erieau",     st:"ON", lat:42.2602, lon:-81.9146},
+  {id:"9063053",                 src:"noaa", name:"Fairport",      short:"Fairport",   st:"OH", lat:41.7598, lon:-81.2811},
+  {id:"5cebf1e43d0f4a073c4bc3c8", src:"chs", name:"Port Stanley",  short:"Pt Stanley", st:"ON", lat:42.6579, lon:-81.2138},
+  {id:"9063038",                 src:"noaa", name:"Erie",          short:"Erie",       st:"PA", lat:42.1539, lon:-80.0758},
+  {id:"5cebf1e43d0f4a073c4bc4ac", src:"chs", name:"Port Dover",    short:"Pt Dover",   st:"ON", lat:42.7813, lon:-80.2015},
+  {id:"5cebf1e43d0f4a073c4bc3cf", src:"chs", name:"Port Colborne", short:"Pt Colborne",st:"ON", lat:42.8744, lon:-79.2529},
+  {id:"9063028",                 src:"noaa", name:"Sturgeon Pt",   short:"Sturgeon Pt",st:"NY", lat:42.6913, lon:-79.0473},
+  {id:"9063020",                 src:"noaa", name:"Buffalo",       short:"Buffalo",    st:"NY", lat:42.8774, lon:-78.8905}
 ];
 const TOLEDO = STATIONS[0], BUFFALO = STATIONS[STATIONS.length-1];
+const M_TO_FT = 3.280839895;
 
 /* project each station onto the Toledo->Buffalo axis, in miles */
 const COSLAT = Math.cos(42.3*Math.PI/180), MI_PER_DEG = 69.09;
@@ -250,7 +283,11 @@ const AX = flat(BUFFALO), AXLEN2 = AX.x*AX.x + AX.y*AX.y;
 const AXIS_MI = Math.sqrt(AXLEN2)*MI_PER_DEG;
 for (const s of STATIONS){
   const p = flat(s);
-  s.mile = Math.max(0, Math.min(1, (p.x*AX.x + p.y*AX.y)/AXLEN2)) * AXIS_MI;
+  s.mile  = Math.max(0, Math.min(1, (p.x*AX.x + p.y*AX.y)/AXLEN2)) * AXIS_MI;
+  /* signed miles to the left or right of that axis: positive is the Canadian
+     side. Two gauges at the same mile on opposite shores are what measure the
+     cross-lake tilt. */
+  s.cross = (-p.x*AX.y + p.y*AX.x)/Math.sqrt(AXLEN2) * MI_PER_DEG;
 }
 
 /* schematic bottom profile along the axis: [mile fraction, depth ft] */
@@ -267,7 +304,16 @@ const fmtTime = new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hou
 
 function ymd(d){ return d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,"0")+String(d.getUTCDate()).padStart(2,"0"); }
 
-async function fetchStation(s){
+function finish(s, m){
+  s.series = m;
+  let sum = 0, n = 0;
+  for (const v of m.values()){ sum += v; n++; }
+  s.mean = n ? sum/n : 0;
+  s.ok = n > 50;
+}
+function fail(s){ s.ok = false; s.series = new Map(); s.mean = 0; }
+
+async function fetchNOAA(s){
   const end = new Date(), beg = new Date(end.getTime() - WINDOW_DAYS*864e5);
   const u = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level"
     + "&station=" + s.id + "&begin_date=" + ymd(beg) + "&end_date=" + ymd(end)
@@ -282,15 +328,48 @@ async function fetchStation(s){
       if (!isFinite(v)) continue;
       m.set(Date.parse(p.t.replace(" ","T")+"Z")/60000, v);
     }
-    s.series = m;
-    let sum = 0, n = 0;
-    for (const v of m.values()){ sum += v; n++; }
-    s.mean = sum/n;
-    s.ok = n > 50;
-  }catch(e){ s.ok = false; s.series = new Map(); s.mean = 0; }
+    finish(s, m);
+  }catch(e){ fail(s); }
+}
+
+/* CHS reports every three minutes in metres above chart datum, which on Erie
+   is the same IGLD 85 low-water datum NOAA quotes in feet. The page works in
+   departures from each gauge's own mean anyway, so any residual difference
+   between the two datums cancels; the conversion is only so the numbers
+   printed beside a Canadian gauge read in the same units as the rest. */
+async function fetchCHS(s){
+  const end = new Date(), beg = new Date(Date.UTC(
+    end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - WINDOW_DAYS));
+  const iso = d => d.toISOString().slice(0,19) + "Z";
+  const u = "https://api-iwls.dfo-mpo.gc.ca/api/v1/stations/" + s.id
+    + "/data?time-series-code=wlo&from=" + iso(beg) + "&to=" + iso(end);
+  try{
+    const r = await fetch(u);
+    const j = await r.json();
+    if (!Array.isArray(j) || !j.length) throw new Error("no data");
+    const m = new Map();
+    for (const p of j){
+      const v = p.value;
+      if (typeof v !== "number" || !isFinite(v)) continue;
+      m.set(Date.parse(p.eventDate)/60000, v*M_TO_FT);
+    }
+    finish(s, m);
+  }catch(e){ fail(s); }
+}
+
+/* Both APIs drop the occasional request, and with the fit spanning gauges a
+   missing one leaves a visible slack in the surface. One retry, after a short
+   and staggered pause so fourteen retries do not arrive together. */
+async function fetchStation(s, i){
+  const go = () => s.src === "chs" ? fetchCHS(s) : fetchNOAA(s);
+  await go();
+  if (s.ok) return;
+  await new Promise(r => setTimeout(r, 400 + (i||0)*90));
+  await go();
 }
 
 async function fetchWind(s){
+  if (s.src !== "noaa") return;
   const u = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=wind&station=" + s.id
     + "&date=latest&units=english&time_zone=gmt&format=json";
   try{
@@ -309,6 +388,102 @@ function devAt(s, t){
   }
   return null;
 }
+
+/* ---------- the surface fit ----------
+   With gauges on both shores the water level is no longer a single curve: at
+   any point along the lake the surface can be tilted across it as well as
+   along it. So at each of FITN stations down the axis we fit, by weighted
+   least squares over every gauge within reach, a small plane -- a level, a
+   cross-lake slope, and an along-lake slope. Sampling that gives two curves:
+   FA, the level on the lake's centreline, and FB, the cross-lake tilt in feet
+   per mile. The whole two-dimensional surface is then
+
+       dev(mile, cross) = FA(mile) + FB(mile) * cross
+
+   which is cheap enough to evaluate at every vertex of a mesh, every frame.
+   The ridge term matters: where the gauges in range all sit on one shore they
+   cannot resolve a cross-slope at all, and without it the fit would invent a
+   violent one. Shrinking toward flat is the honest failure mode.          */
+const FITN = 129, FIT_H = 28, FIT_RIDGE = 0.22, FIT_ARIDGE = 0.02, FIT_CSCALE = 26;
+const FA = new Float32Array(FITN), FB = new Float32Array(FITN);
+const fitMile = k => (k/(FITN-1))*AXIS_MI;
+/* how far across the lake the reporting gauges actually reach. Beyond it the
+   cross-tilt is held flat rather than extrapolated: with, say, only the
+   Canadian shore reporting, running its tilt out to the Ohio side would put
+   the far shore feet out of place on the strength of no measurement at all. */
+let CROSS_LO = 0, CROSS_HI = 0;
+const clampCross = c => c < CROSS_LO ? CROSS_LO : c > CROSS_HI ? CROSS_HI : c;
+
+function fitFrom(getDev){
+  const om = [], oc = [], ov = [];
+  let lo = Infinity, hi = -Infinity;
+  for (const s of STATIONS){
+    const d = getDev(s);
+    if (d === null || d === undefined || !isFinite(d)) continue;
+    om.push(s.mile); oc.push(s.cross); ov.push(d);
+    lo = Math.min(lo, s.cross); hi = Math.max(hi, s.cross);
+  }
+  const n = om.length;
+  CROSS_LO = n ? lo - 6 : 0; CROSS_HI = n ? hi + 6 : 0;
+  for (let k = 0; k < FITN; k++){
+    const m = fitMile(k);
+    /* Centre the cross predictor on the gauges in range before fitting. Left
+       raw, the level and the cross-slope are confounded whenever every gauge
+       nearby sits on one shore, and the ridge cannot tell the difference.
+       Centred, the cross term carries only the spread across the lake, so a
+       one-sided set of gauges shrinks honestly to no tilt at all. */
+    let sw = 0, sc = 0;
+    for (let i = 0; i < n; i++){
+      const u = (om[i]-m)/FIT_H;
+      if (u*u > 9) continue;
+      const w = Math.exp(-u*u);
+      sw += w; sc += w*oc[i];
+    }
+    const cbar = sw > 1e-9 ? sc/sw : 0;
+    /* symmetric normal equations for [1, cross, along] */
+    let a00=0,a01=0,a02=0,a11=0,a12=0,a22=0, b0=0,b1=0,b2=0;
+    for (let i = 0; i < n; i++){
+      const u = (om[i]-m)/FIT_H;
+      if (u*u > 9) continue;                       /* three bandwidths is plenty */
+      const w = Math.exp(-u*u), x1 = (oc[i]-cbar)/FIT_CSCALE, x2 = u, v = ov[i];
+      a00 += w;        a01 += w*x1;      a02 += w*x2;
+      a11 += w*x1*x1;  a12 += w*x1*x2;   a22 += w*x2*x2;
+      b0  += w*v;      b1  += w*x1*v;    b2  += w*x2*v;
+    }
+    if (a00 < 1e-6){ FA[k] = k ? FA[k-1] : 0; FB[k] = k ? FB[k-1] : 0; continue; }
+    /* Regularise the cross term hard and the along-lake term barely at all.
+       The lake is sampled densely from end to end, so the along-lake slope is
+       real information: shrinking it flattened the steep water right at Toledo
+       and Buffalo, which is precisely where a seiche is most interesting. */
+    a11 += FIT_RIDGE*a00; a22 += FIT_ARIDGE*a00;
+    /* 3x3 symmetric solve, by hand -- cofactor expansion is faster here than
+       setting up a general eliminator and it cannot pivot into a surprise */
+    const c00 = a11*a22 - a12*a12,
+          c01 = a12*a02 - a01*a22,
+          c02 = a01*a12 - a11*a02,
+          det = a00*c00 + a01*c01 + a02*c02;
+    if (Math.abs(det) < 1e-12){ FA[k] = b0/a00; FB[k] = 0; continue; }
+    const c11 = a00*a22 - a02*a02,
+          c12 = a02*a01 - a00*a12;
+    const lvl = (c00*b0 + c01*b1 + c02*b2)/det;
+    FB[k] = (c01*b0 + c11*b1 + c12*b2)/det/FIT_CSCALE;
+    FA[k] = lvl - FB[k]*cbar;               /* back to the lake's centreline */
+  }
+}
+function fitAtTime(t){ fitFrom(s => devAt(s, t)); }
+
+/* linear reads off the fitted curves, in miles */
+function fitLevel(m){
+  const f = Math.max(0, Math.min(FITN-1.001, m/AXIS_MI*(FITN-1)));
+  const a = f|0, u = f-a;
+  return FA[a] + (FA[a+1]-FA[a])*u;
+}
+function fitCross(m){
+  const f = Math.max(0, Math.min(FITN-1.001, m/AXIS_MI*(FITN-1)));
+  const a = f|0, u = f-a;
+  return FB[a] + (FB[a+1]-FB[a])*u;
+}
+const fitEval = (m, cross) => fitLevel(m) + fitCross(m)*clampCross(cross);
 
 function buildTimeline(){
   let lo = Infinity, hi = -Infinity;
@@ -352,7 +527,7 @@ const xsec = document.getElementById("xsec");
 const XL = 50, XR = 950, YSURF = 175, YBOT_TOP = 200, YBOT_BASE = 420;
 let devScale = 60;
 const xmile = m => XL + (m/AXIS_MI)*(XR-XL);
-let surfPath, waterPath, dotEls = [], valEls = [], stLabels = [];
+let surfPath, waterPath, dotEls = [], valEls = [], stLabels = [], tieEls = [];
 
 function buildXsec(){
   xsec.innerHTML = "";
@@ -382,18 +557,23 @@ function buildXsec(){
   el(xsec, "line", {x1:XL-18, y1:sy2, x2:XL-10, y2:sy2, stroke:"var(--muted)", "stroke-width":1});
   el(xsec, "text", {x:XL-14, y:sy-7, fill:"var(--muted)", "font-size":10, "text-anchor":"middle"}).textContent = (60/devScale).toFixed(1) + " ft";
 
-  /* station dots, hairlines, labels */
-  dotEls = []; valEls = []; stLabels = [];
+  /* Station dots, hairlines, labels. Fourteen gauges will not fit on two rows,
+     so they run on three, taken in order along the lake -- which guarantees
+     that neighbours never land on the same row. */
+  dotEls = []; valEls = []; stLabels = []; tieEls = [];
+  const ROWY = [30, 68, 106];
   STATIONS.forEach((s, i) => {
-    const x = xmile(s.mile);
-    const up = i % 2 === 0;
-    const ly = up ? 52 : 92;
-    el(xsec, "line", {x1:x, y1:ly+8, x2:x, y2:YSURF+2, stroke:"var(--line)", "stroke-width":1, opacity:.85});
-    const nm = el(xsec, "text", {x:x, y:ly-8, fill:"var(--ink)", "font-size":11.5, "text-anchor":"middle", "font-weight":500});
-    nm.textContent = s.name;
-    if (!s.ok){ nm.setAttribute("fill", "var(--muted)"); nm.textContent += " (offline)"; }
-    const val = el(xsec, "text", {x:x, y:ly+5, "font-size":11, "text-anchor":"middle"});
-    dotEls.push(el(xsec, "circle", {cx:x, cy:YSURF, r:4.5, fill:"var(--gold)", stroke:"#0b1020", "stroke-width":1.5}));
+    const x = xmile(s.mile), ly = ROWY[i % 3];
+    el(xsec, "line", {x1:x, y1:ly+22, x2:x, y2:YSURF+2, stroke:"var(--line)", "stroke-width":1, opacity:.85});
+    const nm = el(xsec, "text", {x:x, y:ly, fill:"var(--ink)", "font-size":11, "text-anchor":"middle", "font-weight":500});
+    nm.textContent = s.short + " " + s.st;
+    if (!s.ok){ nm.setAttribute("fill", "var(--muted)"); nm.textContent = s.short + " (offline)"; }
+    const val = el(xsec, "text", {x:x, y:ly+14, "font-size":11, "text-anchor":"middle"});
+    /* a hair from the fitted centreline out to the gauge's own reading: on a
+       windy day the north and south shores genuinely disagree, and that gap is
+       the cross-lake tilt rather than an error */
+    tieEls.push(el(xsec, "line", {x1:x, y1:YSURF, x2:x, y2:YSURF, stroke:"var(--muted)", "stroke-width":1, opacity:.55}));
+    dotEls.push(el(xsec, "circle", {cx:x, cy:YSURF, r:4, fill:"var(--gold)", stroke:"#0b1020", "stroke-width":1.5}));
     valEls.push(val); stLabels.push(nm);
   });
 
@@ -405,32 +585,45 @@ function buildXsec(){
     "departure from each gauge's 5-day mean · vertical scale exaggerated " + exag.toLocaleString() + "× · bottom profile schematic";
 }
 
+const XSEC_N = 180;
 function renderXsec(t){
-  const pts = [], mapDevs = [];
-  for (const s of STATIONS){
-    const d = devAt(s, t);
-    mapDevs.push(d);
-    if (d === null) continue;
-    pts.push([xmile(s.mile), YSURF - d*devScale, d]);
+  fitAtTime(t);
+  /* the line is the fitted level down the lake's centreline, not a curve bent
+     through the gauges: with gauges on both shores no single line can pass
+     through all of them, and the centreline is what a cross-section means */
+  const curve = [];
+  for (let q = 0; q <= XSEC_N; q++){
+    const m = (q/XSEC_N)*AXIS_MI;
+    curve.push([xmile(m), YSURF - fitLevel(m)*devScale]);
   }
-  if (pts.length < 2) return;
-  const first = [[XL, pts[0][1]]], last = [[XR, pts[pts.length-1][1]]];
-  const curve = first.concat(pts.map(p=>[p[0],p[1]])).concat(last);
-  const d = smoothPath(curve);
+  const d = "M" + curve.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join("L");
   surfPath.setAttribute("d", d);
   waterPath.setAttribute("d", d + "L" + XR + ",455L" + XL + ",455Z");
+  const mapDevs = [];
   STATIONS.forEach((s, i) => {
-    const dv = mapDevs[i];
-    if (dv === null){ dotEls[i].setAttribute("opacity", 0); valEls[i].textContent = ""; return; }
+    const dv = devAt(s, t);
+    mapDevs.push(dv);
+    if (dv === null){
+      dotEls[i].setAttribute("opacity", 0);
+      tieEls[i].setAttribute("opacity", 0);
+      valEls[i].textContent = "";
+      return;
+    }
+    const y = YSURF - dv*devScale, yl = YSURF - fitLevel(s.mile)*devScale;
     dotEls[i].setAttribute("opacity", 1);
-    dotEls[i].setAttribute("cy", YSURF - dv*devScale);
+    dotEls[i].setAttribute("cy", y);
     dotEls[i].setAttribute("fill", dv >= 0 ? "var(--gold)" : "var(--low)");
+    tieEls[i].setAttribute("opacity", Math.abs(y-yl) > 1.5 ? .55 : 0);
+    tieEls[i].setAttribute("y1", yl); tieEls[i].setAttribute("y2", y);
     valEls[i].textContent = (dv >= 0 ? "+" : "−") + Math.abs(dv).toFixed(2) + " ft";
     valEls[i].setAttribute("fill", dv >= 0 ? "var(--gold)" : "var(--low)");
   });
   renderMapDots(mapDevs);
   const dt = new Date(t*60000);
-  document.getElementById("whenlab").innerHTML = fmtDay.format(dt) + " &middot; <b>" + fmtTime.format(dt) + " ET</b>";
+  const when = fmtDay.format(dt) + " &middot; <b>" + fmtTime.format(dt) + " ET</b>";
+  document.getElementById("whenlab").innerHTML = when;
+  document.getElementById("whenlab3").innerHTML = when;
+  lake3d.draw(t);
 }
 
 /* ---------- lake map inset ---------- */
@@ -556,6 +749,574 @@ function renderCursor(){
     "tilt now shown: <b style='color:var(--gold)'>" + (v>=0?"+":"−") + Math.abs(v).toFixed(2) + " ft</b> (Buffalo minus Toledo)";
 }
 
+/* ---------- the whole lake, in three dimensions ----------
+   A seiche is a longitudinal standing wave, so the height of the surface is a
+   function of exactly one number: how far along the Toledo->Buffalo axis you
+   are. That makes the entire 3-D field a 1-D curve swept across the real lake
+   outline -- and it means colour, shading and depth can all be baked into a
+   lookup table once per frame instead of recomputed per vertex. What is left
+   is a heightfield over a lattice, which paints correctly with nothing but
+   back-to-front ordering: no z-buffer, no WebGL, no library.              */
+const lake3d = (function(){
+  const cv = document.getElementById("lake3d");
+  const off = document.createElement("canvas");        /* the top face is painted
+      here and then masked to the shoreline in one composite, rather than
+      clipping every one of the ~3000 quads to a 130-point polygon */
+  /* Everything below draws through these four, and renderInto() swaps them for
+     an off-page pair so a recording can be made at any size and aspect without
+     a second copy of the renderer. */
+  let ctx = cv.getContext("2d"), octx = off.getContext("2d");
+  let W = 1000, H = 470;
+  let OPT = {labels:true, furniture:true, bg:null};
+
+  const D2R = Math.PI/180;
+  let yaw = 0, pitch = 52*D2R;
+  let S = 1, OX = W/2, OY = H/2, ready = false, labelAll = true;
+
+  /* ---- the lake in miles east/north, about the outline's own centre ---- */
+  /* the shared outline runs up the Niagara River to Lake Ontario, which is right
+     for the inset map and a 20-mile spike sticking out of a 3-D lake. Cut it. */
+  const RAW = OUTLINE.filter(p => p[1] < 42.91).map(([lon,lat]) => [lon*COSLAT*MI_PER_DEG, lat*MI_PER_DEG]);
+  let elo=Infinity, ehi=-Infinity, nlo=Infinity, nhi=-Infinity;
+  for (const [e,n] of RAW){ elo=Math.min(elo,e); ehi=Math.max(ehi,e); nlo=Math.min(nlo,n); nhi=Math.max(nhi,n); }
+  const CE=(elo+ehi)/2, CN=(nlo+nhi)/2, SPE=ehi-elo, SPN=nhi-nlo;
+  const RING = RAW.map(([e,n]) => [e-CE, n-CN]);
+  const NR = RING.length;
+  let area2 = 0;
+  for (let i=0;i<NR;i++){ const a=RING[i], b=RING[(i+1)%NR]; area2 += a[0]*b[1]-b[0]*a[1]; }
+  const CCW = area2 > 0;
+
+  const stE = s => s.lon*COSLAT*MI_PER_DEG - CE, stN = s => s.lat*MI_PER_DEG - CN;
+  const TP = [stE(TOLEDO), stN(TOLEDO)], BP = [stE(BUFFALO), stN(BUFFALO)];
+  const AXL = Math.hypot(BP[0]-TP[0], BP[1]-TP[1]);
+  const UE = (BP[0]-TP[0])/AXL, UN = (BP[1]-TP[1])/AXL;
+  const mileAt  = (e,n) => (e-TP[0])*UE + (n-TP[1])*UN;
+  const crossAt = (e,n) => -(e-TP[0])*UN + (n-TP[1])*UE;
+  /* a point given in lake coordinates: m miles along, c miles across */
+  const atMC = (m,c) => [TP[0] + m*UE - c*UN, TP[1] + m*UN + c*UE];
+
+  /* Vertical exaggeration and slab thickness are tied to the lake's own width,
+     so the block looks the same whether the lake is calm or wild. The width is
+     measured across the best-fit viewing angle, worked out in bestFit(). */
+  let RELIEF = 12, SLAB = 10, YAW0 = 0;
+  let K = 1;                                    /* miles of height per foot of water */
+
+  function inRing(e, n){
+    let hit = false;
+    for (let i = 0, j = NR-1; i < NR; j = i++){
+      const a = RING[i], b = RING[j];
+      if ((a[1] > n) !== (b[1] > n) && e < (b[0]-a[0])*(n-a[1])/(b[1]-a[1]) + a[0]) hit = !hit;
+    }
+    return hit;
+  }
+
+  /* ---- the lattice, built once per size ---- */
+  const PADMI = 4;                              /* overshoot past the shore, then masked */
+  let NX = 0, NY = 0, VE=null, VN=null, VL=null, VC=null, PX=null, PY=null;
+  let CELL=null, CM=null, CC=null, CSH=null, CDEP=null;
+  const NS = 320;                               /* height lookup resolution */
+  let MLO = 0, MHI = 1, MSTEP = 1;
+  /* the fit, resampled onto the lattice's own mile axis, with derivatives:
+     aL is the centreline level, bL the cross-lake tilt, dA/dB their slopes */
+  const aL = new Float32Array(NS), bL = new Float32Array(NS),
+        dA = new Float32Array(NS), dB = new Float32Array(NS);
+
+
+  function buildGrid(nx){
+    NX = nx;
+    const spanE = SPE + 2*PADMI, spanN = SPN + 2*PADMI;
+    NY = Math.max(10, Math.round(nx*spanN/spanE));
+    const e0 = -SPE/2 - PADMI, n0 = -SPN/2 - PADMI;
+    const de = spanE/NX, dn = spanN/NY;
+    const NV = (NX+1)*(NY+1);
+    VE = new Float32Array(NV); VN = new Float32Array(NV);
+    VL = new Float32Array(NV); VC = new Float32Array(NV);
+    PX = new Float32Array(NV); PY = new Float32Array(NV);
+    const vin = new Uint8Array(NV);
+    MLO = -PADMI - 2; MHI = AXL + PADMI + 2; MSTEP = (MHI-MLO)/(NS-1);
+    for (let j = 0; j <= NY; j++){
+      for (let i = 0; i <= NX; i++){
+        const k = j*(NX+1)+i, e = e0 + i*de, n = n0 + j*dn;
+        VE[k] = e; VN[k] = n;
+        VL[k] = Math.max(0, Math.min(NS-1.001, (mileAt(e,n)-MLO)/MSTEP));
+        VC[k] = crossAt(e,n);
+        vin[k] = inRing(e,n) ? 1 : 0;
+      }
+    }
+    /* cells: keep any that touch the lake, plus a one-cell skirt, so the mask
+       always has something to cut rather than a ragged hole at the shore */
+    CELL = new Uint8Array(NX*NY);
+    for (let j = 0; j < NY; j++){
+      for (let i = 0; i < NX; i++){
+        let on = 0;
+        for (let b = j-1; b <= j+2 && !on; b++){
+          if (b < 0 || b > NY) continue;
+          for (let a = i-1; a <= i+2; a++){
+            if (a < 0 || a > NX) continue;
+            if (vin[b*(NX+1)+a]){ on = 1; break; }
+          }
+        }
+        CELL[j*NX+i] = on;
+      }
+    }
+    /* how far each cell sits from open shore, as a two-pass chamfer sweep --
+       shallow water near the beach reads lighter, which is what gives the
+       slab a body instead of a flat wash of colour */
+    const dist = new Float32Array(NX*NY);
+    for (let c = 0; c < NX*NY; c++){
+      const i = c%NX, j = (c/NX)|0;
+      const all = vin[j*(NX+1)+i] && vin[j*(NX+1)+i+1] && vin[(j+1)*(NX+1)+i] && vin[(j+1)*(NX+1)+i+1];
+      dist[c] = all ? 1e6 : 0;
+    }
+    const at = (i,j) => (i<0||j<0||i>=NX||j>=NY) ? 0 : dist[j*NX+i];
+    for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++)
+      if (dist[j*NX+i] > 0) dist[j*NX+i] = Math.min(dist[j*NX+i], Math.min(at(i-1,j), at(i,j-1), at(i-1,j-1)+.41, at(i+1,j-1)+.41)+1);
+    for (let j = NY-1; j >= 0; j--) for (let i = NX-1; i >= 0; i--)
+      if (dist[j*NX+i] > 0) dist[j*NX+i] = Math.min(dist[j*NX+i], Math.min(at(i+1,j), at(i,j+1), at(i+1,j+1)+.41, at(i-1,j+1)+.41)+1);
+
+    /* A chamfer sweep over a coarse lattice gives blocky iso-distance contours,
+       and those terraces show straight through into the water colour. Two box
+       passes cost nothing here (this runs once per resize) and leave a field
+       smooth enough to shade with. */
+    const tmp = new Float32Array(NX*NY);
+    for (let pass = 0; pass < 2; pass++){
+      for (let j = 0; j < NY; j++){
+        for (let i = 0; i < NX; i++){
+          let sum = 0, cnt = 0;
+          for (let b = j-1; b <= j+1; b++){
+            if (b < 0 || b >= NY) continue;
+            for (let a = i-1; a <= i+1; a++){
+              if (a < 0 || a >= NX) continue;
+              sum += dist[b*NX+a]; cnt++;
+            }
+          }
+          tmp[j*NX+i] = sum/cnt;
+        }
+      }
+      dist.set(tmp);
+    }
+
+    const far = Math.max(2, NY*0.20);
+    CM = new Float32Array(NX*NY); CC = new Float32Array(NX*NY);
+    CSH = new Float32Array(NX*NY); CDEP = new Float32Array(NX*NY);
+    for (let c = 0; c < NX*NY; c++){
+      const i = c%NX, j = (c/NX)|0, k = j*(NX+1)+i;
+      CM[c] = VL[k]; CC[c] = VC[k];
+      CSH[c] = Math.min(1, dist[c]/far);
+      /* schematic bed depth under this cell, from the same profile the
+         cross-section draws, so the deep eastern basin reads darker */
+      const f = Math.max(0, Math.min(1, (MLO + VL[k]*MSTEP)/AXL));
+      let dep = BOTTOM[0][1];
+      for (let q = 0; q < BOTTOM.length-1; q++){
+        if (f >= BOTTOM[q][0] && f <= BOTTOM[q+1][0]){
+          const u = (f-BOTTOM[q][0])/(BOTTOM[q+1][0]-BOTTOM[q][0]);
+          dep = BOTTOM[q][1] + (BOTTOM[q+1][1]-BOTTOM[q][1])*u; break;
+        }
+      }
+      CDEP[c] = Math.min(1, dep/MAX_DEPTH);
+    }
+  }
+
+  /* ---- projection: orthographic, camera elevated by `pitch`, spun by `yaw`.
+         At pitch 90 this collapses to a plain north-up map. ---- */
+  let cy = 1, sy = 0, sp = 1, cp = 0;
+  function setTrig(){ cy = Math.cos(yaw); sy = Math.sin(yaw); sp = Math.sin(pitch); cp = Math.cos(pitch); }
+  function px(e,n,z){ return OX + (e*cy + n*sy)*S; }
+  function py(e,n,z){ return OY - ((-e*sy + n*cy)*sp + z*cp)*S; }
+
+  /* Erie lies diagonally, so a north-up view wastes most of a wide canvas on
+     empty corners. Rather than hard-code a bearing, sweep every angle and keep
+     whichever one lets the lake draw biggest, then spin it so Buffalo lands on
+     the right and the view reads the same way as the cross-section below. */
+  function fitAt(y, relief, slab){
+    const c = Math.cos(y), s2 = Math.sin(y), sp2 = Math.sin(pitch), cp2 = Math.cos(pitch);
+    let xlo=Infinity, xhi=-Infinity, ylo=Infinity, yhi=-Infinity;
+    for (const [e,n] of RING){
+      const x = e*c + n*s2, d = -e*s2 + n*c;
+      xlo = Math.min(xlo,x); xhi = Math.max(xhi,x);
+      for (const z of [relief, -relief-slab]){
+        const yy = -(d*sp2 + z*cp2);
+        ylo = Math.min(ylo,yy); yhi = Math.max(yhi,yy);
+      }
+    }
+    return {s: Math.min((W-2*PADX)/(xhi-xlo), (H-PADT-PADB)/(yhi-ylo)), h: (yhi-ylo)};
+  }
+  function bestFit(){
+    let best = 0, by = 0;
+    for (let d = 0; d < 180; d += 2){
+      const y = d*D2R, f = fitAt(y, 0, 0).s;
+      if (f > best){ best = f; by = y; }
+    }
+    const wid = fitAt(by, 0, 0).h/Math.max(0.2, Math.sin(pitch));
+    RELIEF = 0.17*wid; SLAB = 0.14*wid;
+    best = 0;
+    for (let d = -14; d <= 14; d += 1){
+      const y = by + d*D2R, f = fitAt(y, RELIEF, SLAB).s;
+      if (f > best){ best = f; YAW0 = y; }
+    }
+    const c = Math.cos(YAW0), s2 = Math.sin(YAW0);
+    if ((BP[0]*c + BP[1]*s2) < (TP[0]*c + TP[1]*s2)) YAW0 += Math.PI;
+    yaw = YAW0;
+  }
+
+  const PADX = 40, PADT = 38, PADB = 44;        /* room for gauge labels and the caption */
+  function layout(){
+    setTrig();
+    let xlo=Infinity, xhi=-Infinity, ylo=Infinity, yhi=-Infinity;
+    for (const [e,n] of RING){
+      const x = e*cy + n*sy, d = -e*sy + n*cy;
+      xlo = Math.min(xlo,x); xhi = Math.max(xhi,x);
+      for (const z of [RELIEF, -RELIEF-SLAB]){
+        const y = -(d*sp + z*cp);
+        ylo = Math.min(ylo,y); yhi = Math.max(yhi,y);
+      }
+    }
+    S = Math.min((W-2*PADX)/(xhi-xlo), (H-PADT-PADB)/(yhi-ylo));
+    OX = W/2 - (xlo+xhi)/2*S;
+    OY = PADT - ylo*S + (H-PADT-PADB-(yhi-ylo)*S)/2;
+  }
+
+  /* ---- colour: water blue, warmed where the lake is piled up and sunk into
+         indigo where it has been drawn down, then lit by the surface slope ---- */
+  const mix = (a,b,u) => [a[0]+(b[0]-a[0])*u, a[1]+(b[1]-a[1])*u, a[2]+(b[2]-a[2])*u];
+  const SHALLOW = [64,132,166], DEEP = [9,34,60];
+  const CREST = [124,206,232], WARM = [226,200,140], TROUGH = [40,54,110];
+  const LX = -0.42, LY = -0.30, LZ = 0.86;      /* light, fixed to the camera: upper left */
+
+  /* Colour is worked out exactly for every cell, every frame. An earlier version
+     quantised it into a lookup cache to save string building, which tiled the
+     lake with faint rectangular terraces for no real gain: a whole frame costs
+     about two milliseconds against the forty a frame is allowed. */
+  function paint(dev, shore, bed, shade){
+    const t = Math.max(-1, Math.min(1, dev/Math.max(maxDev, 0.10)));
+    const body = Math.min(1, (0.22 + 0.78*bed) * shore);
+    let v = mix(SHALLOW, DEEP, body);
+    /* Piling the level tint straight onto a dark blue just turns it grey, so
+       lift the luminance first and only then push the hue: water that is up
+       goes bright and faintly warm, water that is down sinks into indigo. */
+    const lift = t > 0 ? 1 + 0.34*t : 1 + 0.40*t;
+    v = [v[0]*lift, v[1]*lift, v[2]*lift];
+    if (t > 0){ v = mix(v, CREST, t*0.30); v = mix(v, WARM, t*0.15); }
+    else v = mix(v, TROUGH, -t*0.30);
+    const r = v[0]*shade, g = v[1]*shade, b = v[2]*shade;
+    return "rgb(" + (r > 255 ? 255 : r|0) + ","
+                  + (g > 255 ? 255 : g|0) + ","
+                  + (b > 255 ? 255 : b|0) + ")";
+  }
+
+  /* ---- one frame ---- */
+  function draw(t, getDev){
+    if (!ready) return;
+    const gd = getDev || (s => devAt(s, t));
+    fitFrom(gd);
+    /* resample the fit onto the lattice's mile axis, with slopes */
+    for (let k = 0; k < NS; k++){
+      const m = Math.max(0, Math.min(AXL, MLO + k*MSTEP));
+      aL[k] = fitLevel(m); bL[k] = fitCross(m);
+    }
+    for (let k = 0; k < NS; k++){
+      const p0 = Math.max(0,k-1), p1 = Math.min(NS-1,k+1), h = (p1-p0)*MSTEP;
+      dA[k] = (aL[p1]-aL[p0])/h; dB[k] = (bL[p1]-bL[p0])/h;
+    }
+    /* project every lattice vertex */
+    const NV = (NX+1)*(NY+1);
+    for (let k = 0; k < NV; k++){
+      const f = VL[k], a = f|0, u = f-a, b = Math.min(NS-1, a+1);
+      const z = (aL[a] + (aL[b]-aL[a])*u + (bL[a] + (bL[b]-bL[a])*u)*clampCross(VC[k])) * K;
+      const e = VE[k], n = VN[k];
+      PX[k] = OX + (e*cy + n*sy)*S;
+      PY[k] = OY - ((-e*sy + n*cy)*sp + z*cp)*S;
+    }
+
+    /* ---- top face, into the mask buffer ---- */
+    octx.save(); octx.setTransform(1,0,0,1,0,0);
+    octx.clearRect(0,0,octx.canvas.width,octx.canvas.height); octx.restore();
+    octx.lineWidth = 1; octx.lineJoin = "round";
+
+    /* back to front. On a lattice the correct order is just the sweep
+       direction, which flips with the quadrant the camera is in. */
+    const iStep = (sy > 0) ? 1 : -1, jStep = (cy < 0) ? 1 : -1;
+    const i0 = iStep > 0 ? 0 : NX-1, i1 = iStep > 0 ? NX : -1;
+    const j0 = jStep > 0 ? 0 : NY-1, j1 = jStep > 0 ? NY : -1;
+    for (let j = j0; j !== j1; j += jStep){
+      const r0 = j*(NX+1), r1 = (j+1)*(NX+1), cr = j*NX;
+      for (let i = i0; i !== i1; i += iStep){
+        const c = cr+i;
+        if (!CELL[c]) continue;
+        const f = CM[c], a = f|0, u = f-a, b = Math.min(NS-1, a+1), cross = clampCross(CC[c]);
+        const lv = aL[a] + (aL[b]-aL[a])*u, tl = bL[a] + (bL[b]-bL[a])*u;
+        const dev = lv + tl*cross;
+        /* the surface gradient, resolved back into east/north: along the axis
+           it is the slope of the fit, across it the cross-tilt itself */
+        const gm = (dA[a] + (dA[b]-dA[a])*u) + (dB[a] + (dB[b]-dB[a])*u)*cross;
+        const gx = (gm*UE - tl*UN)*K, gy = (gm*UN + tl*UE)*K;
+        const rx = -gx*cy - gy*sy, ry = gx*sy - gy*cy;
+        const inv = 1/Math.sqrt(rx*rx + ry*ry + 1);
+        const lam = Math.max(0, (rx*LX + ry*LY + LZ)*inv);
+        const col = paint(dev, CSH[c], CDEP[c], 0.52 + 0.62*lam);
+        octx.fillStyle = col; octx.strokeStyle = col;
+        octx.beginPath();
+        octx.moveTo(PX[r0+i],   PY[r0+i]);
+        octx.lineTo(PX[r0+i+1], PY[r0+i+1]);
+        octx.lineTo(PX[r1+i+1], PY[r1+i+1]);
+        octx.lineTo(PX[r1+i],   PY[r1+i]);
+        octx.closePath();
+        octx.fill(); octx.stroke();          /* the stroke hides hairline seams */
+      }
+    }
+
+    /* rungs across the lake and three lines running its length: the wireframe
+       is what actually makes the tilt legible from above */
+    const half = SPN*0.62;
+    octx.strokeStyle = "rgba(198,224,255,.14)"; octx.lineWidth = 1;
+    for (let m = 0; m <= AXL+1; m += 20){
+      octx.beginPath();
+      for (let q = 0; q <= 1; q++){
+        const c = q ? -half : half, [e,n] = atMC(m, c), z = zAt(m, c)*K;
+        const X = px(e,n,z), Y = py(e,n,z);
+        if (q) octx.lineTo(X,Y); else octx.moveTo(X,Y);
+      }
+      octx.stroke();
+    }
+    octx.strokeStyle = "rgba(198,224,255,.17)";
+    for (const c of [-16, 0, 16]){
+      octx.beginPath();
+      for (let q = 0; q <= 120; q++){
+        const m = (q/120)*AXL, [e,n] = atMC(m, c), z = zAt(m, c)*K;
+        const X = px(e,n,z), Y = py(e,n,z);
+        if (q) octx.lineTo(X,Y); else octx.moveTo(X,Y);
+      }
+      octx.stroke();
+    }
+
+    /* cut everything to the shoreline in one go */
+    octx.globalCompositeOperation = "destination-in";
+    octx.fillStyle = "#fff";
+    ringPath(octx, true);
+    octx.fill();
+    octx.globalCompositeOperation = "source-over";
+
+    /* ---- main canvas: the slab, then the face, then the furniture ---- */
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    if (OPT.bg){ ctx.fillStyle = OPT.bg; ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height); }
+    else ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    ctx.restore();
+
+    drawWalls();
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0);
+    ctx.drawImage(octx.canvas, 0, 0);
+    ctx.restore();
+
+    /* the waterline, and a ghost of where it would sit if the lake were level */
+    ctx.lineWidth = 1.6; ctx.strokeStyle = "rgba(150,205,240,.75)";
+    ringPath(ctx, true); ctx.stroke();
+    ctx.lineWidth = 1; ctx.strokeStyle = "rgba(152,162,186,.34)";
+    ctx.setLineDash([3,4]);
+    ringPath(ctx, false); ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawGauges(gd);
+    if (OPT.furniture) drawFurniture();
+  }
+
+  function zAt(m, cross){
+    const f = Math.max(0, Math.min(NS-1.001, (m-MLO)/MSTEP));
+    const a = f|0, u = f-a, b = Math.min(NS-1, a+1);
+    return (aL[a] + (aL[b]-aL[a])*u) + (bL[a] + (bL[b]-bL[a])*u)*clampCross(cross);
+  }
+  function ringPath(c, live){
+    c.beginPath();
+    for (let i = 0; i < NR; i++){
+      const [e,n] = RING[i];
+      const z = live ? zAt(mileAt(e,n), crossAt(e,n))*K : 0;
+      const X = px(e,n,z), Y = py(e,n,z);
+      if (i) c.lineTo(X,Y); else c.moveTo(X,Y);
+    }
+    c.closePath();
+  }
+
+  function drawWalls(){
+    const segs = [];
+    for (let i = 0; i < NR; i++){
+      const a = RING[i], b = RING[(i+1)%NR];
+      const za = zAt(mileAt(a[0],a[1]), crossAt(a[0],a[1]))*K,
+            zb = zAt(mileAt(b[0],b[1]), crossAt(b[0],b[1]))*K;
+      const d = ((-a[0]*sy + a[1]*cy) + (-b[0]*sy + b[1]*cy))/2;
+      let ne = b[1]-a[1], nn = -(b[0]-a[0]);        /* outward normal, CCW ring */
+      if (!CCW){ ne = -ne; nn = -nn; }
+      const L = Math.hypot(ne,nn) || 1;
+      const rx = (ne*cy + nn*sy)/L, ry = (-ne*sy + nn*cy)/L;
+      segs.push([d, a, b, za, zb, rx, ry]);
+    }
+    segs.sort((p,q) => q[0]-p[0]);                  /* far walls first */
+    for (const [, a, b, za, zb, rx, ry] of segs){
+      const lam = Math.max(0, rx*LX + ry*(-0.55) + 0.34);
+      const g = Math.round(16 + 46*lam);
+      ctx.fillStyle = "rgb(" + Math.round(g*0.52) + "," + Math.round(g*0.78) + "," + Math.round(g*1.28) + ")";
+      ctx.beginPath();
+      ctx.moveTo(px(a[0],a[1],za),       py(a[0],a[1],za));
+      ctx.lineTo(px(b[0],b[1],zb),       py(b[0],b[1],zb));
+      ctx.lineTo(px(b[0],b[1],-SLAB),    py(b[0],b[1],-SLAB));
+      ctx.lineTo(px(a[0],a[1],-SLAB),    py(a[0],a[1],-SLAB));
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1; ctx.stroke();
+    }
+  }
+
+  const KEY = {Toledo:1, Cleveland:1, "Port Stanley":1, Erie:1, Buffalo:1};
+  function drawGauges(gd){
+    ctx.lineCap = "round";
+    const rows = STATIONS.map((s, i) => {
+      const e = stE(s), n = stN(s), d = gd(s);
+      return {s, i, e, n, d, depth: -e*sy + n*cy};
+    }).sort((a,b) => b.depth - a.depth);
+    for (const r of rows){
+      const {s, e, n, d} = r;
+      const x0 = px(e,n,0), y0 = py(e,n,0);
+      if (d === null){
+        ctx.fillStyle = "rgba(120,132,158,.55)";
+        ctx.beginPath(); ctx.arc(x0, y0, 2.6, 0, 7); ctx.fill();
+        continue;
+      }
+      const z = d*K, x1 = px(e,n,z), y1 = py(e,n,z);
+      const col = d >= 0 ? "#e8c85a" : "#6fc3e8";
+      ctx.strokeStyle = d >= 0 ? "rgba(232,200,90,.75)" : "rgba(111,195,232,.75)";
+      ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+      ctx.fillStyle = "rgba(120,132,158,.5)";
+      ctx.beginPath(); ctx.arc(x0, y0, 1.8, 0, 7); ctx.fill();
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(x1, y1, 3.6, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(8,12,24,.9)"; ctx.lineWidth = 1.3; ctx.stroke();
+      if (!OPT.labels || (!labelAll && !KEY[s.name])) continue;
+      const txt = s.short + "  " + (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(2);
+      ctx.font = '500 10.5px "IBM Plex Mono",monospace';
+      ctx.textAlign = "center";
+      /* Toledo and Buffalo sit hard against the ends of the lake, so their
+         labels run off the canvas unless they are pulled back inside it */
+      const half = ctx.measureText(txt).width/2 + 4;
+      const lx = Math.max(half, Math.min(W-half, x1));
+      /* three tiers, taken in order along the lake, so the gauges bunched at
+         the Buffalo end never land on the same line as each other */
+      const ly = y1 - 10 - (r.i % 3)*13;
+      ctx.lineWidth = 3.4; ctx.strokeStyle = "rgba(6,10,22,.85)";
+      ctx.strokeText(txt, lx, ly);
+      ctx.fillStyle = col;
+      ctx.fillText(txt, lx, ly);
+    }
+    ctx.textAlign = "left";
+  }
+
+  function drawFurniture(){
+    /* compass, spinning with the view */
+    const cxp = W - 44, cyp = H - 52, R = 15;
+    ctx.strokeStyle = "rgba(152,162,186,.32)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 7); ctx.stroke();
+    const nx = sy, ny = -cy*sp;                    /* world north, projected */
+    const L = Math.hypot(nx, ny) || 1;
+    ctx.strokeStyle = "rgba(232,200,90,.8)"; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(cxp - nx/L*R*0.8, cyp - ny/L*R*0.8);
+    ctx.lineTo(cxp + nx/L*R*0.8, cyp + ny/L*R*0.8);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(232,200,90,.9)";
+    ctx.font = '500 9px "IBM Plex Mono",monospace'; ctx.textAlign = "center";
+    ctx.fillText("N", cxp + nx/L*(R+8), cyp + ny/L*(R+8) + 3);
+
+    /* level scale: how many feet the relief is worth */
+    const bx = 30, by = H - 46;
+    const md = Math.max(maxDev, 0.10);
+    const barH = RELIEF*cp*S;
+    ctx.strokeStyle = "rgba(152,162,186,.5)"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(bx, by-barH); ctx.lineTo(bx, by);
+    ctx.moveTo(bx-4, by-barH); ctx.lineTo(bx+4, by-barH);
+    ctx.moveTo(bx-4, by); ctx.lineTo(bx+4, by);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(152,162,186,.85)";
+    ctx.font = '400 9.5px "IBM Plex Mono",monospace'; ctx.textAlign = "left";
+    ctx.fillText(md.toFixed(2) + " ft", bx + 8, by - barH/2 + 3);
+
+    ctx.textAlign = "left";
+    ctx.font = '400 10px "IBM Plex Mono",monospace';
+    ctx.fillStyle = "rgba(120,132,158,.9)";
+    const exag = Math.round(K*5280/100)*100;
+    ctx.fillText("dashed ring = a level lake · height exaggerated "
+      + exag.toLocaleString() + "×" + (OPT.hint === false ? "" : " · drag to spin"), 30, H - 14);
+  }
+
+  /* ---- drag to spin, drag to tilt ---- */
+  let drag = null;
+  cv.addEventListener("pointerdown", ev => {
+    drag = {x: ev.clientX, y: ev.clientY, yaw, pitch};
+    cv.setPointerCapture(ev.pointerId);
+    cv.style.cursor = "grabbing";
+  });
+  cv.addEventListener("pointermove", ev => {
+    if (!drag) return;
+    yaw = drag.yaw + (ev.clientX - drag.x)*0.006;
+    pitch = Math.max(16*D2R, Math.min(88*D2R, drag.pitch + (ev.clientY - drag.y)*0.004));
+    layout();
+    if (ready) draw(TIMES[idx]);
+  });
+  const stop = () => { drag = null; cv.style.cursor = "grab"; };
+  cv.addEventListener("pointerup", stop);
+  cv.addEventListener("pointercancel", stop);
+
+  /* ---- sizing ---- */
+  let gridNx = 0;
+  function resize(){
+    const w = Math.max(280, cv.clientWidth || cv.parentElement.clientWidth || 900);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const pw = Math.round(w*dpr), ph = Math.round(w*H/W*dpr);
+    if (cv.width !== pw || cv.height !== ph){
+      cv.width = pw; cv.height = ph; off.width = pw; off.height = ph;
+    }
+    const sc = pw/W;
+    ctx.setTransform(sc,0,0,sc,0,0);
+    octx.setTransform(sc,0,0,sc,0,0);
+    labelAll = w >= 700;
+    const nx = w < 560 ? 76 : w < 900 ? 106 : 134;
+    if (nx !== gridNx){ gridNx = nx; buildGrid(nx); }
+    layout();
+    if (ready) draw(TIMES[idx]);
+  }
+  window.addEventListener("resize", resize);
+
+  return {
+    /* Draw one frame into someone else's canvas, at their size. The module's
+       own state is swapped out and put back, so the page canvas is untouched. */
+    renderInto(dctx, doctx, lw, lh, t, getDev, opts){
+      if (!ready) return;
+      const sv = {ctx, octx, W, H, S, OX, OY, OPT, labelAll};
+      ctx = dctx; octx = doctx; W = lw; H = lh;
+      labelAll = lw >= 700;
+      OPT = Object.assign({labels:false, furniture:false, bg:null}, opts || {});
+      try{ layout(); draw(t, getDev); }
+      finally{
+        ctx = sv.ctx; octx = sv.octx; W = sv.W; H = sv.H;
+        S = sv.S; OX = sv.OX; OY = sv.OY; OPT = sv.OPT; labelAll = sv.labelAll;
+      }
+    },
+    /* a finer lattice while exporting, since a recording is wider than the page */
+    beginExport(nx){ gridNx = nx; buildGrid(nx); },
+    endExport(){ gridNx = 0; resize(); },
+    get yaw(){ return yaw; },
+    get pitch(){ return pitch; },
+    build(){
+      bestFit();
+      K = RELIEF/Math.max(maxDev, 0.10);
+      gridNx = 0;
+      ready = false;
+      resize();
+      ready = true;
+    },
+    draw(t){ OPT = {labels:true, furniture:true, bg:null}; draw(t); },
+    reset(){ yaw = YAW0; pitch = 52*D2R; layout(); if (ready) draw(TIMES[idx]); }
+  };
+})();
+
 /* ---------- playback & state ---------- */
 function setIdx(i, user){
   idx = Math.max(0, Math.min(TIMES.length-1, i));
@@ -587,6 +1348,7 @@ function togglePlay(){
 }
 document.getElementById("playbtn").addEventListener("click", togglePlay);
 document.getElementById("livebtn").addEventListener("click", () => setLive(true));
+document.getElementById("resetview").addEventListener("click", () => lake3d.reset());
 
 function updatePill(){
   const b = devAt(BUFFALO, TN), o = devAt(TOLEDO, TN);
@@ -599,7 +1361,7 @@ function updatePill(){
 /* ---------- load ---------- */
 async function load(first){
   const stat = document.getElementById("loadstat");
-  if (first) stat.textContent = "contacting 8 NOAA gauges";
+  if (first) stat.textContent = "contacting 14 gauges, NOAA and CHS";
   await Promise.all(STATIONS.map(fetchStation).concat(STATIONS.map(fetchWind)));
   if (!STATIONS.some(s => s.ok)){
     if (first) stat.textContent = "NOAA API unreachable, try again shortly";
@@ -609,6 +1371,7 @@ async function load(first){
   buildXsec();
   buildMap();
   buildSlosh();
+  lake3d.build();
   updatePill();
   if (live) idx = TIMES.length-1;
   renderXsec(TIMES[idx]);
@@ -674,24 +1437,26 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
     if (vb === null) return va;
     return va + (vb - va)*(fi - a);
   }
-  function surfaceLerp(fi, hz, vs){
+  /* Both the still and the movie draw the fitted centreline, sampled evenly,
+     so they agree with the page above them and stay smooth where two gauges on
+     opposite shores disagree. */
+  const POSTER_N = 96;
+  function surfaceFitted(hz, vs){
+    if (!STATIONS.some(s => s.ok)) return null;
     const pts = [];
-    for (const s of STATIONS){
-      const d = devLerp(s, fi);
-      if (d !== null) pts.push([smile(s.mile), hz - d*vs]);
+    for (let q = 0; q <= POSTER_N; q++){
+      const m = (q/POSTER_N)*AXIS_MI;
+      pts.push([smile(m), hz - fitLevel(m)*vs]);
     }
-    if (pts.length < 2) return null;
     return [[0, pts[0][1]]].concat(pts, [[U, pts[pts.length-1][1]]]);
   }
-
+  function surfaceLerp(fi, hz, vs){
+    fitFrom(s => devLerp(s, fi));
+    return surfaceFitted(hz, vs);
+  }
   function surfaceAt(tt, hz, vs){
-    const pts = [];
-    for (const s of STATIONS){
-      const d = devAt(s, tt);
-      if (d !== null) pts.push([smile(s.mile), hz - d*vs]);
-    }
-    if (pts.length < 2) return null;
-    return [[0, pts[0][1]]].concat(pts, [[U, pts[pts.length-1][1]]]);
+    fitAtTime(tt);
+    return surfaceFitted(hz, vs);
   }
 
   async function makePoster(kind){
@@ -778,15 +1543,15 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
     ctx.strokeStyle = "rgba(84,124,184,.26)"; ctx.lineWidth = 1.3; ctx.stroke();
 
     /* ---- gauges ---- */
-    const rowUp = HZ - AMP - 64, rowDn = HZ - AMP - 28;
+    const ROWS = [HZ - AMP - 100, HZ - AMP - 64, HZ - AMP - 28];
     STATIONS.forEach((s, i) => {
       const d = devAt(s, t);
-      const x = smile(s.mile), row = (i % 2 === 0) ? rowUp : rowDn, vy = row + 17;
+      const x = smile(s.mile), row = ROWS[i % 3], vy = row + 17;
       const on = d !== null, col = !on ? "#5c6683" : (d >= 0 ? "#f0d072" : "#6fc3e8");
       const y = on ? HZ - d*vs : HZ;
       ctx.beginPath(); ctx.moveTo(x, vy + 7); ctx.lineTo(x, y - 7);
       ctx.strokeStyle = "rgba(150,170,215,.22)"; ctx.lineWidth = 1; ctx.stroke();
-      T(s.name, x, row, '600 13px "Public Sans",system-ui,sans-serif', on ? "#b9c4dd" : "#5f6982", "center");
+      T(s.short, x, row, '600 13px "Public Sans",system-ui,sans-serif', on ? "#b9c4dd" : "#5f6982", "center");
       T(on ? (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(2) + " ft" : "offline",
         x, vy, '500 12.5px "IBM Plex Mono",monospace', col, "center");
       if (!on) return;
@@ -797,7 +1562,8 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
     });
 
     /* ---- type over the sky ---- */
-    T("LAKE ERIE · TOLEDO TO BUFFALO · EIGHT NOAA GAUGES", X0, 58,
+    fitAtTime(t);
+    T("LAKE ERIE · TOLEDO TO BUFFALO · FOURTEEN GAUGES, TWO COUNTRIES", X0, 58,
       '500 12.5px "IBM Plex Mono",monospace', "#e8c85a", "left", "0.2em");
     T("The Erie Seiche", X0, 66 + P.title,
       '700 ' + P.title + 'px "Zilla Slab",Georgia,serif', "#eef2fa");
@@ -871,7 +1637,7 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
     /* ---- credit ---- */
     const fy = UH - 30;
     T("ryansajdak.com/greatlakes/erie/seiche", X0, fy, '500 13.5px "IBM Plex Mono",monospace', "#5ba8d4");
-    T("NOAA CO-OPS gauges · departure from each 5-day mean · vertical exaggeration "
+    T("NOAA CO-OPS + CHS gauges · departure from each 5-day mean · vertical exaggeration "
       + exag.toLocaleString() + "× · bed schematic",
       X1, fy, '400 11.5px "IBM Plex Mono",monospace', "#5f6982", "right");
 
@@ -881,13 +1647,79 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
   }
 
 
-  /* ---------- movie: 16:9, no type, the lake and nothing else ----------
-     The stills stack 140 surfaces per frame. A movie cannot afford that, so the
-     trails live in their own buffer that fades a little each frame and takes one
-     fresh stroke: the same long exposure, accumulated over time instead of
-     redrawn. Fade rate is solved so a surface stays visible for 14 hours of lake
-     time whatever the playback speed.                                        */
+  /* ---------- the 3-D lake, as a still ----------
+     The map above already knows how to draw itself into somebody else's canvas,
+     so this is the same renderer at poster scale on a much finer lattice, with
+     the type laid over the empty sky above the lake. Nothing is scraped off the
+     page, so the download does not depend on the window's size.            */
+  async function makePoster3D(){
+    const P = {w:2400, h:1350}, U = 1200, SS = P.w/U, UH = P.h/SS;
+    const CRED = 46, sceneH = UH - CRED;          /* leave the credit row its own strip */
+    const cv = mkCanvas(P.w, P.h), ctx = cv.getContext("2d");
+    const o3 = mkCanvas(P.w, P.h), o3ctx = o3.getContext("2d");
+    ctx.setTransform(SS,0,0,SS,0,0); o3ctx.setTransform(SS,0,0,SS,0,0);
+    ctx.textBaseline = "alphabetic";
+
+    lake3d.beginExport(320);                      /* a still can afford a fine mesh */
+    try{
+      lake3d.renderInto(ctx, o3ctx, U, sceneH, TIMES[idx], null,
+                        {labels:true, furniture:true, hint:false, bg:"#070c17"});
+    }finally{ lake3d.endExport(); }
+
+    function T(str, x, y, font, color, align, ls){
+      ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || "left";
+      if (ls) try{ ctx.letterSpacing = ls; }catch(e){}
+      ctx.fillText(str, x, y);
+      try{ ctx.letterSpacing = "0px"; }catch(e){}
+    }
+    const X0 = 92, X1 = U - 92;
+    const t = TIMES[idx], dt = new Date(t*60000);
+    const b = devAt(BUFFALO, t), oo = devAt(TOLEDO, t);
+    const tilt = (b === null || oo === null) ? null : b - oo;
+    const tiltStr = tilt === null ? "no data" : (tilt >= 0 ? "+" : "−") + Math.abs(tilt).toFixed(2) + " ft";
+    const tiltCol = tilt === null ? "#98a2ba" : (tilt >= 0 ? "#f0d072" : "#6fc3e8");
+    const tiltCap = tilt === null ? "gauges offline"
+      : Math.abs(tilt) < 0.15 ? "end to end. the lake is sitting level"
+      : tilt > 0 ? "end to end. piled up at the Buffalo end"
+      : "end to end. piled up at the Toledo end";
+
+    T("LAKE ERIE FROM ABOVE · FOURTEEN GAUGES, TWO COUNTRIES", X0, 58,
+      '500 12.5px "IBM Plex Mono",monospace', "#e8c85a", "left", "0.2em");
+    T("The Erie Seiche", X0, 120, '700 54px "Zilla Slab",Georgia,serif', "#eef2fa");
+    T("Wind tips the lake, then the whole thing rocks back, about every 14 hours.",
+      X0, 152, '400 16px "Public Sans",system-ui,sans-serif', "#9aa5bd");
+    T(fmtDay.format(dt) + " · " + fmtTime.format(dt) + " ET", X1, 58,
+      '400 13px "IBM Plex Mono",monospace', "#9aa5bd", "right");
+    ctx.shadowColor = tilt === null ? "transparent"
+      : (tilt >= 0 ? "rgba(240,205,110,.35)" : "rgba(111,195,232,.35)");
+    ctx.shadowBlur = 26;
+    T(tiltStr, X1, 120, '500 50px "IBM Plex Mono",monospace', tiltCol, "right");
+    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
+    T(tiltCap, X1, 152, '400 14px "Public Sans",system-ui,sans-serif', "#9aa5bd", "right");
+
+    T("ryansajdak.com/greatlakes/erie/seiche", X0, UH - 18,
+      '500 13.5px "IBM Plex Mono",monospace', "#5ba8d4");
+    T("NOAA CO-OPS + CHS gauges · departure from each 5-day mean · surface fitted across both shores",
+      X1, UH - 18, '400 11.5px "IBM Plex Mono",monospace', "#5f6982", "right");
+
+    const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+    return {blob, name: "erie-seiche-" + dfmt.format(dt) + "-" + hfmt.format(dt).replace(":","") + "-3d.png",
+            w: P.w, h: P.h};
+  }
+
+  /* ---------- movies: 16:9, three ways ----------
+     The cross-section panel stacks 140 surfaces per still. A movie cannot
+     afford that, so its trails live in their own buffer that fades a little
+     each frame and takes one fresh stroke: the same long exposure, accumulated
+     over time instead of redrawn. The fade rate is solved so a surface stays
+     visible for 14 hours of lake time whatever the playback speed.
+     The 3-D panel is drawn by the map above, rendered off-page at movie size.  */
   const MOV = {w:1920, h:1080, fps:60, secs:24, bits:12e6};
+  const MOVIES = {
+    movie:   {label:"cross-section", d3:0,    d2:1},
+    movie3d: {label:"the lake in 3-D", d3:1,  d2:0},
+    movieAB: {label:"both views", d3:0.615,   d2:0.385}
+  };
   let movAbort = false;
 
   function pickMime(){
@@ -897,31 +1729,47 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
       if (MediaRecorder.isTypeSupported(m)) return m;
     return "";
   }
+  const mkCanvas = (w,h) => { const c = document.createElement("canvas"); c.width=w; c.height=h; return c; };
 
-  async function makeMovie(onprog){
+  async function makeMovie(kind, onprog){
     const mime = pickMime();
     if (!mime) throw new Error("this browser cannot record canvas video");
-    const U = 1200, S = MOV.w/U, UH = MOV.h/S;
+    const PLAN = MOVIES[kind], U = 1200, S = MOV.w/U, UH = MOV.h/S;
 
-    const cv = document.createElement("canvas");
-    cv.width = MOV.w; cv.height = MOV.h;
+    const cv = mkCanvas(MOV.w, MOV.h);
     const ctx = cv.getContext("2d");
-    const tr = document.createElement("canvas");
-    tr.width = MOV.w; tr.height = MOV.h;
-    const tc = tr.getContext("2d");
-    tc.scale(S, S); tc.lineCap = "round"; tc.lineJoin = "round";
 
-    /* one fixed vertical scale for the whole sweep, so the amplitude never pulses */
-    const HZ = Math.round(UH*0.54), AMP = UH*0.125, vs = AMP/Math.max(maxDev, 0.12);
-    const bedTop = HZ + 12, bedBot = UH - 4;
+    /* how the frame is divided: 3-D on top where present, section beneath */
+    const h3 = UH*PLAN.d3, h2 = UH*PLAN.d2, y2 = h3;
+
+    /* --- the 3-D panel gets its own pair of buffers at its own size --- */
+    let c3 = null, c3ctx = null, o3 = null, o3ctx = null;
+    if (h3 > 0){
+      const ph = Math.round(h3*S);
+      c3 = mkCanvas(MOV.w, ph); c3ctx = c3.getContext("2d");
+      o3 = mkCanvas(MOV.w, ph); o3ctx = o3.getContext("2d");
+      c3ctx.setTransform(S,0,0,S,0,0); o3ctx.setTransform(S,0,0,S,0,0);
+      lake3d.beginExport(MOV.w > 1400 ? 200 : 130);   /* ~6 ms a frame, measured */
+    }
+
+    /* --- the cross-section panel, and its long-exposure buffer --- */
+    const HZ = y2 + h2*0.54, AMP = h2*0.125;
+    const vs = AMP/Math.max(maxDev, 0.12);      /* one fixed scale for the whole
+                                                   sweep, so the amplitude never pulses */
+    const bedTop = HZ + 12, bedBot = y2 + h2 - 4;
     const bed = BOTTOM.map(([f,dep]) => [f*U, bedTop + (dep/MAX_DEPTH)*(bedBot-bedTop)]);
+    let tr = null, tc = null;
+    if (h2 > 0){
+      tr = mkCanvas(MOV.w, MOV.h); tc = tr.getContext("2d");
+      tc.setTransform(S,0,0,S,0,0); tc.lineCap = "round"; tc.lineJoin = "round";
+    }
 
     const NF = MOV.fps*MOV.secs, spf = (TIMES.length-1)/NF;
     const f14 = (14*60)/(spf*STEP), fade = 1 - Math.pow(0.02, 1/f14);
-    /* A surface that sits still converges to alpha = strokeAlpha/fade. Picking the
-       stroke alpha by eye blew that past 1 and clipped the ribbon to white, so solve
-       it from the fade instead: a motionless line lands just under saturation and
-       everything moving stays blue. */
+    /* A surface that sits still converges to alpha = strokeAlpha/fade. Picking
+       the stroke alpha by eye blew that past 1 and clipped the ribbon to white,
+       so solve it from the fade instead: a motionless line lands just under
+       saturation and everything moving stays blue. */
     const coreA = 1.12*fade, haloA = coreA*0.46;
 
     function trailStep(i){
@@ -938,21 +1786,21 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
       return pts;
     }
 
-    function frame(i){
+    function panel2D(i){
       const pts = trailStep(i);
       ctx.setTransform(S, 0, 0, S, 0, 0);
-      let g = ctx.createLinearGradient(0, 0, 0, HZ);
+      let g = ctx.createLinearGradient(0, y2, 0, HZ);
       g.addColorStop(0, "#04060d"); g.addColorStop(1, "#0c1628");
-      ctx.fillStyle = g; ctx.fillRect(0, 0, U, HZ);
-      ctx.fillStyle = "#0a1322"; ctx.fillRect(0, HZ, U, UH-HZ);
+      ctx.fillStyle = g; ctx.fillRect(0, y2, U, HZ-y2);
+      ctx.fillStyle = "#0a1322"; ctx.fillRect(0, HZ, U, y2+h2-HZ);
       if (pts){
         const wp = new Path2D();
-        curve(wp, pts); wp.lineTo(U, UH); wp.lineTo(0, UH); wp.closePath();
+        curve(wp, pts); wp.lineTo(U, y2+h2); wp.lineTo(0, y2+h2); wp.closePath();
         g = ctx.createLinearGradient(0, HZ-AMP, 0, bedBot);
         g.addColorStop(0, "#0f2f4c"); g.addColorStop(.22, "#081e33"); g.addColorStop(1, "#030a14");
         ctx.fillStyle = g; ctx.fill(wp);
       }
-      ctx.setTransform(1, 0, 0, 1, 0, 0);                 /* trails are already at device scale */
+      ctx.setTransform(1, 0, 0, 1, 0, 0);          /* trails are already at device scale */
       ctx.globalCompositeOperation = "lighter";
       ctx.drawImage(tr, 0, 0);
       ctx.globalCompositeOperation = "source-over";
@@ -965,12 +1813,35 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
         ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
       }
       ctx.beginPath(); curve(ctx, bed);
-      ctx.lineTo(U, UH); ctx.lineTo(0, UH); ctx.closePath();
+      ctx.lineTo(U, y2+h2); ctx.lineTo(0, y2+h2); ctx.closePath();
       ctx.fillStyle = "#03060d"; ctx.fill();
       ctx.beginPath(); curve(ctx, bed);
       ctx.strokeStyle = "rgba(84,124,184,.26)"; ctx.lineWidth = 1.3; ctx.stroke();
 
-      /* type: a title, the two ends of the lake, and a clock that runs with the sweep */
+      const ly = HZ - AMP - 22;
+      ctx.font = '500 12px "IBM Plex Mono",monospace';
+      ctx.fillStyle = "rgba(150,166,196,.8)";
+      try{ ctx.letterSpacing = "0.22em"; }catch(e){}
+      ctx.textAlign = "left";  ctx.fillText("TOLEDO",  54, ly);
+      ctx.textAlign = "right"; ctx.fillText("BUFFALO", U - 54, ly);
+      try{ ctx.letterSpacing = "0px"; }catch(e){}
+    }
+
+    function panel3D(i){
+      lake3d.renderInto(c3ctx, o3ctx, U, h3, null, s => devLerp(s, i),
+                        {labels:false, furniture:false, bg:"#070c17"});
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(c3, 0, 0);
+    }
+
+    function frame(i){
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.fillStyle = "#04060d"; ctx.fillRect(0,0,MOV.w,MOV.h);
+      if (h3 > 0) panel3D(i);
+      if (h2 > 0) panel2D(i);
+
+      /* type: a title, and a clock that runs with the sweep */
+      ctx.setTransform(S, 0, 0, S, 0, 0);
       const a = Math.max(0, Math.floor(i)), bIdx = Math.min(TIMES.length-1, a+1);
       const dt = new Date((TIMES[a] + (TIMES[bIdx]-TIMES[a])*(i-a))*60000);
       ctx.textAlign = "left";
@@ -991,17 +1862,10 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
       ctx.font = '500 24px "IBM Plex Mono",monospace';
       ctx.fillStyle = "#c3cde2";
       ctx.fillText(clock + " ET", U - 54, 94);
-      const ly = HZ - AMP - 34;
-      ctx.font = '500 12px "IBM Plex Mono",monospace';
-      ctx.fillStyle = "rgba(150,166,196,.8)";
-      try{ ctx.letterSpacing = "0.22em"; }catch(e){}
-      ctx.textAlign = "left";  ctx.fillText("TOLEDO",  54, ly);
-      ctx.textAlign = "right"; ctx.fillText("BUFFALO", U - 54, ly);
-      try{ ctx.letterSpacing = "0px"; }catch(e){}
     }
 
-    /* charge the buffer over the first 14 hours before the tape rolls */
-    const pre = Math.ceil(f14);
+    /* charge the trail buffer over the first 14 hours before the tape rolls */
+    const pre = h2 > 0 ? Math.ceil(f14) : 0;
     for (let k = 0; k < pre; k++) trailStep(k*spf);
     const i0 = pre*spf, span = (TIMES.length-1) - i0;
     frame(i0);
@@ -1025,21 +1889,25 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
        skipping ahead: never jumpy, occasionally a little longer. */
     const t0 = performance.now(), step = span/NF, ivl = 1000/MOV.fps;
     let n = 0, due = t0;
-    await new Promise(res => {
-      (function tick(){
-        const now = performance.now();
-        if (now >= due - 4){
-          frame(i0 + step*n);
-          track.requestFrame();
-          n++;
-          due += ivl;
-          if (now > due + ivl*3) due = now + ivl;        /* fell behind, resync */
-          onprog(n/NF);
-          if (n >= NF || movAbort) return res();
-        }
-        requestAnimationFrame(tick);
-      })();
-    });
+    try{
+      await new Promise(res => {
+        (function tick(){
+          const now = performance.now();
+          if (now >= due - 4){
+            frame(i0 + step*n);
+            track.requestFrame();
+            n++;
+            due += ivl;
+            if (now > due + ivl*3) due = now + ivl;        /* fell behind, resync */
+            onprog(n/NF);
+            if (n >= NF || movAbort) return res();
+          }
+          requestAnimationFrame(tick);
+        })();
+      });
+    }finally{
+      if (h3 > 0) lake3d.endExport();
+    }
     const real = (performance.now()-t0)/1000;
     await new Promise(r => setTimeout(r, 300));
     rec.stop();
@@ -1068,25 +1936,26 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       if (objURL) URL.revokeObjectURL(objURL);
 
-      if (kind === "movie"){
+      if (MOVIES[kind]){
+        stopPlay();                       /* the page must not fight the recorder */
         vid.removeAttribute("src");
         note.textContent = "recording…";
         dl.removeAttribute("href"); dl.textContent = "Recording…";
-        const r = await makeMovie(p => {
+        const r = await makeMovie(kind, p => {
           const pct = Math.round(p*100);
           lab.textContent = "Recording " + pct + "%";
-          note.textContent = "recording " + pct + "% · " + MOV.w + " × " + MOV.h + " · " + MOV.secs + "s";
+          note.textContent = "recording " + MOVIES[kind].label + " " + pct + "% · " + MOV.w + " × " + MOV.h;
         });
         objURL = URL.createObjectURL(r.blob);
         vid.src = objURL; show(vid); vid.play().catch(() => {});
-        dl.href = objURL; dl.download = "erie-seiche-" + stamp() + "-movie." + r.ext;
+        dl.href = objURL; dl.download = "erie-seiche-" + stamp() + "-" + kind + "." + r.ext;
         dl.textContent = "Download " + r.ext.toUpperCase();
-        note.textContent = MOV.w + " × " + MOV.h + " · " + r.secs.toFixed(1) + "s @ "
+        note.textContent = MOVIES[kind].label + " · " + MOV.w + " × " + MOV.h + " · " + r.secs.toFixed(1) + "s @ "
           + Math.round(r.fps) + " fps · " + (r.blob.size/1048576).toFixed(1) + " MB · " + r.ext.toUpperCase();
         copy.hidden = true;
       }else{
         lab.textContent = "Rendering…";
-        const r = await makePoster(kind);
+        const r = kind === "lake3d" ? await makePoster3D() : await makePoster(kind);
         objURL = URL.createObjectURL(r.blob);
         img.src = objURL; show(img);
         dl.href = objURL; dl.download = r.name;
