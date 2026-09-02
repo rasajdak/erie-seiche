@@ -5,19 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Erie Seiche &mdash; Watch Lake Erie Slosh, Live</title>
 <meta name="description" content="Lake Erie tilts. Strong winds pile water up at one end of the lake, and when they let go the whole lake sloshes back and forth for days. This page reads fourteen water-level gauges from Toledo to Buffalo, American and Canadian, every few minutes and animates the lake's surface in 3-D, live.">
-<link rel="canonical" href="https://ryansajdak.com/greatlakes/erie/seiche/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ryansajdak.com">
 <meta property="og:title" content="The Erie Seiche: watch Lake Erie slosh, live">
 <meta property="og:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. The live lake surface in 3-D, from fourteen gauges on both shores.">
-<meta property="og:url" content="https://ryansajdak.com/greatlakes/erie/seiche/">
-<meta property="og:image" content="https://ryansajdak.com/greatlakes/erie/seiche/preview.png">
+<!-- Set og:url and the two image URLs to your own absolute URLs before deploying;
+     social scrapers will not follow a relative path. -->
+<meta property="og:image" content="preview.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="The Erie Seiche: watch Lake Erie slosh, live">
 <meta name="twitter:description" content="Wind piles water up at one end of Lake Erie, then the whole lake sloshes back with a 14-hour rhythm. Live from fourteen gauges on both shores.">
-<meta name="twitter:image" content="https://ryansajdak.com/greatlakes/erie/seiche/preview.png">
+<meta name="twitter:image" content="preview.png">
 <meta name="theme-color" content="#0b1020">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1020'/%3E%3Cpath d='M12 62 Q 26 46 40 58 T 68 58 T 96 54 L 96 88 L 12 88 Z' fill='%235ba8d4'/%3E%3Cpath d='M12 56 Q 26 40 40 52 T 68 52 T 96 48' stroke='%23e8c85a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,28 +67,6 @@ svg text{font-family:"IBM Plex Mono",monospace}
 .explain b{color:var(--ink)}
 .explain a{color:var(--water)}
 
-.cornerbtns{position:fixed;right:14px;bottom:14px;z-index:600;display:flex;gap:8px}
-.fbbtn{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:999px;
-  background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(8px);box-shadow:var(--shadow);cursor:pointer;
-  color:var(--ink);font-family:inherit;font-size:.85rem;font-weight:600;text-decoration:none}
-.fbbtn:hover{border-color:var(--water)}
-.fbbtn svg{width:15px;height:15px}
-.fbpanel{position:fixed;right:14px;bottom:60px;z-index:650;width:320px;max-width:calc(100vw - 28px);display:none;
-  background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
-.fbpanel.on{display:block}
-.fbpanel h3{font-family:"Zilla Slab",serif;margin:0 0 3px;font-size:1.12rem}
-.fbpanel .lead{color:var(--muted);font-size:.84rem;margin:0 0 10px}
-.fbpanel textarea{width:100%;min-height:84px;resize:vertical;padding:9px;border:1px solid var(--line);
-  border-radius:9px;background:var(--paper);color:var(--ink);font-family:inherit;font-size:.88rem}
-.fbpanel input{width:100%;margin-top:8px;padding:9px;border:1px solid var(--line);border-radius:9px;
-  background:var(--paper);color:var(--ink);font-family:inherit;font-size:.85rem}
-.fbrow{display:flex;gap:8px;margin-top:10px}
-.fbsend{flex:1;padding:9px;border:none;border-radius:9px;background:var(--water);color:#0b1020;
-  font-family:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
-.fbsend:disabled{opacity:.55;cursor:default}
-.fbclose{padding:9px 13px;border:1px solid var(--line);border-radius:9px;background:none;color:var(--muted);font-family:inherit;font-size:.85rem;cursor:pointer}
-.fbmsg{font-size:.8rem;margin-top:8px;min-height:1em}
-.fbmsg.ok{color:var(--water)} .fbmsg.err{color:#f0894e}
 
 #loader{position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:15px;background:var(--paper);color:var(--ink);transition:opacity .45s ease}
@@ -208,24 +185,6 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
   </div>
 </main>
 
-<div class="cornerbtns">
-  <a class="fbbtn coffee" href="https://buymeacoffee.com/ryansajdak" target="_blank" rel="noopener">&#9749; Coffee</a>
-  <button class="fbbtn" id="fbbtn" aria-label="Send feedback">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    Feedback
-  </button>
-</div>
-<div class="fbpanel" id="fbpanel">
-  <h3>Suggest an improvement</h3>
-  <p class="lead">Ideas, corrections, or bugs for this page &mdash; thank you!</p>
-  <textarea id="fbtext" placeholder="What could be better?"></textarea>
-  <input id="fbemail" type="email" placeholder="Your email (optional, for a reply)" autocomplete="email">
-  <div class="fbrow">
-    <button class="fbsend" id="fbsend">Send feedback</button>
-    <button class="fbclose" id="fbclose">Cancel</button>
-  </div>
-  <div class="fbmsg" id="fbmsg"></div>
-</div>
 
 <div id="shademe">
   <div class="shbox">
@@ -243,7 +202,7 @@ footer b{color:var(--ink)} footer a{color:var(--water)}
 </div>
 
 <footer>
-  <b>Data:</b> Eight <a href="https://tidesandcurrents.noaa.gov/" target="_blank" rel="noopener">NOAA CO-OPS</a> gauges on the American shore (6-minute preliminary data) and six <a href="https://tides.gc.ca/" target="_blank" rel="noopener">Canadian Hydrographic Service</a> gauges on the Canadian one (3-minute data via the DFO IWLS API, metres converted to feet), all on the same Low Water Datum, IGLD&nbsp;85, refreshed every 6 minutes &middot; lake outline from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>. Both views show departures from each gauge's own 5-day mean. Because gauges sit on both shores, the surface is fitted as a plane at each point along the lake (a level plus a cross-lake tilt), so the cross-section line is the level down the lake's centreline and the dots are the individual gauges, which need not lie on it. The bottom profile is schematic. Seiche history: NOAA, NWS Buffalo, Buffalo History Gazette. <span style="font-family:'IBM Plex Mono',monospace;font-size:.68rem">Part of <a href="https://ryansajdak.com/">ryansajdak.com</a> &middot; see also <a href="../../floor/#erie">the floor of Lake Erie</a>.</span>
+  <b>Data:</b> Eight <a href="https://tidesandcurrents.noaa.gov/" target="_blank" rel="noopener">NOAA CO-OPS</a> gauges on the American shore (6-minute preliminary data) and six <a href="https://tides.gc.ca/" target="_blank" rel="noopener">Canadian Hydrographic Service</a> gauges on the Canadian one (3-minute data via the DFO IWLS API, metres converted to feet), all on the same Low Water Datum, IGLD&nbsp;85, refreshed every 6 minutes &middot; lake outline from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a>. Both views show departures from each gauge's own 5-day mean. Because gauges sit on both shores, the surface is fitted as a plane at each point along the lake (a level plus a cross-lake tilt), so the cross-section line is the level down the lake's centreline and the dots are the individual gauges, which need not lie on it. The bottom profile is schematic. Seiche history: NOAA, NWS Buffalo, Buffalo History Gazette.
 </footer>
 
 <script>
@@ -275,6 +234,10 @@ const STATIONS = [
 ];
 const TOLEDO = STATIONS[0], BUFFALO = STATIONS[STATIONS.length-1];
 const M_TO_FT = 3.280839895;
+
+/* Stamped in the corner of the exported poster and movie. Set it to your own
+   site, or leave it empty and nothing is drawn. */
+const SITE_CREDIT = "";
 
 /* project each station onto the Toledo->Buffalo axis, in miles */
 const COSLAT = Math.cos(42.3*Math.PI/180), MI_PER_DEG = 69.09;
@@ -1636,7 +1599,7 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
 
     /* ---- credit ---- */
     const fy = UH - 30;
-    T("ryansajdak.com/greatlakes/erie/seiche", X0, fy, '500 13.5px "IBM Plex Mono",monospace', "#5ba8d4");
+    if (SITE_CREDIT) T(SITE_CREDIT, X0, fy, '500 13.5px "IBM Plex Mono",monospace', "#5ba8d4");
     T("NOAA CO-OPS + CHS gauges · departure from each 5-day mean · vertical exaggeration "
       + exag.toLocaleString() + "× · bed schematic",
       X1, fy, '400 11.5px "IBM Plex Mono",monospace', "#5f6982", "right");
@@ -1697,7 +1660,7 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
     ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
     T(tiltCap, X1, 152, '400 14px "Public Sans",system-ui,sans-serif', "#9aa5bd", "right");
 
-    T("ryansajdak.com/greatlakes/erie/seiche", X0, UH - 18,
+    if (SITE_CREDIT) T(SITE_CREDIT, X0, UH - 18,
       '500 13.5px "IBM Plex Mono",monospace', "#5ba8d4");
     T("NOAA CO-OPS + CHS gauges · departure from each 5-day mean · surface fitted across both shores",
       X1, UH - 18, '400 11.5px "IBM Plex Mono",monospace', "#5f6982", "right");
@@ -1990,34 +1953,6 @@ setInterval(() => { if (!playing) load(false); }, 6*60*1000);
   document.addEventListener("keydown", e => { if (e.key === "Escape"){ closeModal(); menu.classList.remove("on"); } });
 })();
 
-/* ---------- feedback ---------- */
-(function feedback(){
-  const btn = document.getElementById("fbbtn"), panel = document.getElementById("fbpanel"),
-        txt = document.getElementById("fbtext"), em = document.getElementById("fbemail"),
-        send = document.getElementById("fbsend"), close = document.getElementById("fbclose"),
-        msg = document.getElementById("fbmsg");
-  btn.addEventListener("click", () => { panel.classList.toggle("on"); if (panel.classList.contains("on")) txt.focus(); });
-  close.addEventListener("click", () => panel.classList.remove("on"));
-  send.addEventListener("click", async () => {
-    const message = txt.value.trim();
-    if (message.length < 3){ msg.className = "fbmsg err"; msg.textContent = "Please add a little more detail."; return; }
-    send.disabled = true; msg.className = "fbmsg"; msg.textContent = "Sending…";
-    const addr = ["dev", "ryansajdak.com"].join("@");
-    try{
-      const r = await fetch("https://formsubmit.co/ajax/" + addr, {method:"POST",
-        headers:{"Content-Type":"application/json", "Accept":"application/json"},
-        body: JSON.stringify({message, reply_email: em.value.trim() || "(not provided)",
-          _subject: "Erie seiche page — feedback", page: location.href})});
-      if (!r.ok) throw new Error("http " + r.status);
-      msg.className = "fbmsg ok"; msg.textContent = "Sent — thank you!";
-      txt.value = ""; em.value = "";
-      setTimeout(() => panel.classList.remove("on"), 1600);
-    }catch(err){
-      msg.className = "fbmsg err";
-      msg.innerHTML = 'Could not send — email me at <a href="mailto:' + addr + '">' + addr + "</a> instead.";
-    }finally{ send.disabled = false; }
-  });
-})();
 </script>
 </body>
 </html>

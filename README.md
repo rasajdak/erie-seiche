@@ -5,7 +5,9 @@ and six Canadian, are read every six minutes and fitted into a single lake surfa
 drawn two ways: a cross-section down the lake's long axis, and a 3-D orthographic
 view of the whole lake tilting.
 
-Live at <https://ryansajdak.com/greatlakes/erie/seiche/>.
+Live at <https://ryansajdak.com/greatlakes/erie/seiche/>. This repo is that page with
+the personal bits taken out, so it is a clean starting point rather than a mirror. See
+"What is not in here" below.
 
 ## What is in here
 
@@ -14,6 +16,23 @@ Live at <https://ryansajdak.com/greatlakes/erie/seiche/>.
 
 There are no dependencies, no package manager, no server code. The page fetches
 public, keyless APIs directly from the browser.
+
+## What is not in here
+
+The live page carries a few things that belong to its author and not to a fork, so they
+were removed rather than left for you to find later:
+
+- the Buy Me a Coffee button and the feedback panel, including the form endpoint and the
+  contact address behind it
+- the canonical link and the `og:`/`twitter:` URLs pointing at ryansajdak.com. The two
+  image tags are relative now, which social scrapers will not follow, so set all three to
+  your own absolute URLs before you deploy.
+- the "Part of ryansajdak.com" footer line and its link to the sibling lake-floor map
+- the site credit stamped into the corner of every exported poster and movie. That is now
+  `SITE_CREDIT` (~line 280), an empty string that draws nothing. Put your own URL in it
+  and the exports are signed again.
+
+Attribution in this README is a different matter, and it is the one thing worth keeping.
 
 ## Running it
 
@@ -76,6 +95,7 @@ Roughly in order of effort:
    camera has a default yaw chosen because Erie lies diagonally (~line 927).
 5. Rewrite the prose. The header, the caption block, and the seiche history are all
    Erie-specific.
+6. Set `SITE_CREDIT` and the `og:`/`twitter:` URLs to your own, per "What is not in here".
 
 ## Gotchas learned the hard way
 
@@ -95,4 +115,4 @@ Roughly in order of effort:
 ## Licence and reuse
 
 Written by Ryan Sajdak. The underlying data is public (NOAA, DFO, Natural Earth).
-Fork it, strip the branding, point it at your own lake.
+Fork it and point it at your own lake. Credit is appreciated, not enforced.
