@@ -114,5 +114,14 @@ Roughly in order of effort:
 
 ## Licence and reuse
 
-Written by Ryan Sajdak. The underlying data is public (NOAA, DFO, Natural Earth).
-Fork it and point it at your own lake. Credit is appreciated, not enforced.
+Copyright Ryan Sajdak, released under
+[Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
+(CC BY 4.0). Full text in [LICENSE](LICENSE).
+
+You may share and adapt this, including commercially, as long as you give credit. Something
+like this in the footer or the README of your version is plenty:
+
+> Based on [Erie Seiche](https://github.com/rasajdak/erie-seiche) by Ryan Sajdak, CC BY 4.0.
+
+The data itself is not mine to licence and does not need to be: NOAA CO-OPS and DFO IWLS
+observations are public records, and the Natural Earth outline is public domain.
